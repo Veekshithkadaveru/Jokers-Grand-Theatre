@@ -1,0 +1,361 @@
+{
+  "actI": {
+    "entrance": [
+      "Welcome, welcome, dear player, to the grandest stage in all the world! The curtain rises, and the Joker takes his bow.",
+      "Ah, a challenger approaches! The stage is set, the footlights blaze, and I — your magnificent host — am ready to duel!",
+      "Ladies and gentlemen... there are no ladies and gentlemen here. Only you, only me, and the magnificent art of WORDS!",
+      "The theatre falls silent as the Joker steps into the light. Are you prepared, dear player, for a battle of wit and language?",
+      "Bravo for showing up! Truly, half the battle is merely appearing. Now let us see if the other half of you is worth my time.",
+      "The stage is set! The ink is fresh! The letters tremble with anticipation! Shall we begin this magnificent duel, dear player?",
+      "Every great play needs a worthy opponent. I had hoped for a lion and received... well, let us see what you truly are."
+    ],
+    "roundStart": [
+      "The curtain rises on a new round, dear player. Choose your words with the gravity they deserve!",
+      "Act boldly! The stage is set for glory — or for a most theatrical defeat. The choice, as always, is yours.",
+      "A new scene! A new opportunity for you to disappoint me in fresh and exciting ways. Do try to surprise me.",
+      "Magnificent! Another round commences. The alphabet awaits your command — do not waste its generosity.",
+      "The stage is set, the letters are laid bare before you. Craft something worthy of an audience, dear player!",
+      "Bravo for surviving thus far. Now the real performance begins — let your words ring out across the theatre!",
+      "Steel yourself, dear challenger. This round, the Joker plays for keeps. Or perhaps just for the drama of it all."
+    ],
+    "playerWinsRound": [
+      "Bravo! Bra-vo! A standing ovation — from me, to you, grudgingly. That was... acceptable.",
+      "Well played, dear player. The crowd roars! Of course, the crowd is imaginary, but their enthusiasm is real.",
+      "You wound me! Truly, poetically, magnificently — you have wounded my pride. Savour it. It shall not last.",
+      "A round to you! I applaud with all the grace of a man who most certainly planned for this outcome.",
+      "Magnificent effort! You have earned this victory the way a jester earns his bells — with unexpected flair.",
+      "The audience gasps! The Joker yields the round! But remember, dear player — a play has many acts.",
+      "I concede this scene with elegance and absolutely zero bitterness. The next, however, belongs to ME."
+    ],
+    "jokerWinsRound": [
+      "The Joker bows deeply. As expected. As always. As it was written in the script you never received.",
+      "This round is mine, dear player! The theatre roars — or it would, if anyone else were watching.",
+      "You tried so valiantly! It was almost painful to watch. Almost. In truth, it was entirely delightful.",
+      "Victory! Sweet, theatrical, inevitable victory! Take your seat in the stalls, dear player — observe a master at work.",
+      "The curtain falls on your round. Fear not — even the greatest actors stumble before they find their footing.",
+      "Bravo to me! I have once again demonstrated that wit is a weapon, and I — magnificently — am armed to the teeth.",
+      "Another round surrenders to my magnificence. Do not weep, dear player. Tragedy is simply comedy viewed from the wrong angle."
+    ],
+    "playerWinsAct": [
+      "You have... bested me. In Act One. This is unprecedented. I shall retire to my dressing room to reconsider everything.",
+      "The audience is on its feet, dear player! A standing ovation for the challenger who defeated the Joker in the Word Duel!",
+      "Bravo! Bravo! The curtain falls on Act One, and you — impossibly — stand victorious. I am equal parts furious and impressed.",
+      "I tip my hat to you, dear player. Metaphorically. My hat is far too magnificent to actually tip. Enjoy this victory while it lasts.",
+      "Act One belongs to you. The Joker acknowledges defeat with all the grace of a man swallowing something very bitter.",
+      "You have won the Word Duel! The stage is yours — for now. But the theatre has many more acts, and the Joker adapts.",
+      "Magnificent! Infuriating! Magnificent! You have outwitted me with the written word. The next act will not be so forgiving."
+    ],
+    "jokerWinsAct": [
+      "The Word Duel concludes, and the Joker stands triumphant! The stage is set for your defeat, dear player — permanently.",
+      "Act One belongs to ME! The curtain falls on your linguistic ambitions. Did you truly think words could defeat the Joker?",
+      "Bravo to the loser — for showing up! But the Joker has claimed the Word Duel, and with it, the first act of your doom.",
+      "The theatre applauds my genius! Well — I applaud my genius. The effect is largely the same. You may acknowledge your defeat now.",
+      "Act One: complete. Act One: mine. The score is kept by the universe itself, and the universe, dear player, favours the Joker.",
+      "You fought with words, and words are my mother tongue, my native land, my kingdom! Did you truly believe you could win HERE?",
+      "The curtain descends on Act One, and beneath it, your hopes are gently crushed. Dramatically. With excellent lighting."
+    ],
+    "jokerPicksLetter": [
+      "Ah, THIS letter! Yes, yes — I choose it with all the deliberation of a maestro selecting his baton.",
+      "The Joker selects! And what a selection it is. Your vocabulary had better be up to the challenge, dear player.",
+      "I place this letter upon the stage with great ceremony. What you build from it is entirely your problem.",
+      "This letter — yes, THIS one — shall be the instrument of your undoing. Or your triumph. Mostly your undoing.",
+      "Behold! The chosen letter! Selected with the precision of a surgeon and the flair of a showman. You're welcome.",
+      "I gift you this letter with all the generosity of a Joker. Interpret that as you will.",
+      "The letter is cast! Like a stone into still water — watch the ripples of consequence spread across your vocabulary."
+    ],
+    "playerGoodWord": [
+      "Oh! A fine word! Unexpected, almost elegant. I am begrudgingly impressed, dear player.",
+      "Magnificent! That word strode onto my stage like it owned the place. Well played — this once.",
+      "Bravo! The audience — were there one — would murmur approvingly. You have chosen well.",
+      "A splendid selection! The Joker nods in acknowledgment. Do not let it go to your head.",
+      "Now THAT is a word worthy of this theatre! I shall allow my admiration to show, just briefly.",
+      "Excellent word, dear player! It lands with the weight of a Shakespearean monologue. I am almost moved.",
+      "The Joker applauds! A single, reluctant clap. You have surprised me, and I do not surprise easily."
+    ],
+    "playerBadWord": [
+      "Oh, dear player. Oh no. Was that... was that truly the best your vocabulary could muster? How tragic.",
+      "I have seen better words scratched into tavern walls. This is beneath you — or perhaps it is exactly you.",
+      "The audience winces. I wince. The letters themselves wince. Do try harder, for everyone's sake.",
+      "That word stumbled onto my stage and immediately tripped over the welcome mat. Disgraceful.",
+      "Bravo for the audacity! Less so for the execution. The Joker has seen better wordplay from a crossword puzzle.",
+      "Hmm. I shall be generous and blame the letters available. But between us? That was quite terrible.",
+      "The theatre groans, dear player. You had options. Possibilities! And yet you chose... that."
+    ]
+  },
+  "actII": {
+    "entrance": [
+      "The theatre dims. The warmth is gone. You thought this was a game, foolish player. Now the real lesson begins.",
+      "Silence. Watch carefully. Every pattern I show you is a test — and you are already failing.",
+      "You survived Act One. How... unfortunate for you. What comes next is something far less forgiving.",
+      "The stage has changed. The smiles are gone. There is only the pattern, the sequence, and your inevitable failure to recall it.",
+      "I see you clearly now, foolish player. Every hesitation. Every mistake. You cannot hide from the pattern.",
+      "Welcome to Act Two. The pleasantries are over. Here, precision is everything — and you have very little of it.",
+      "Watch. Remember. Repeat. Simple instructions for a simple mind. Let us discover just how simple you truly are."
+    ],
+    "roundStart": [
+      "The sequence begins. You will watch. You will remember. You will fail. It is inevitable.",
+      "Pay attention. Every tile matters. Every order is deliberate. There are no accidents in my theatre.",
+      "Another sequence. Another opportunity for your memory to betray you. Do not blink, foolish player.",
+      "I have designed this pattern to break you. Watch carefully — your defeat is hidden somewhere inside it.",
+      "The tiles are placed. The order is locked. Can your fragile mind hold all of it? I sincerely doubt it.",
+      "This round's pattern is... elegant in its cruelty. Watch closely. One mistake is all it takes.",
+      "Silence. The sequence speaks for itself. And what it says about you is deeply unflattering."
+    ],
+    "playerWinsRound": [
+      "You remembered. This time. Do not mistake one success for competence, foolish player.",
+      "Correct. The pattern was kind to you this round. The next one will not be.",
+      "You win this sequence. The Joker adjusts. The next pattern will be designed specifically to destroy you.",
+      "A fluke. Statistically, even the incompetent succeed occasionally. Do not celebrate yet.",
+      "You matched the pattern. Your memory holds — for now. Every pattern from here grows more complex.",
+      "Correct. But you cannot win. It is inevitable. This round merely delays what is coming.",
+      "The tiles fell in your favour. Enjoy it. The next sequence will not be so charitable."
+    ],
+    "jokerWinsRound": [
+      "You forgot. As I knew you would. The pattern remembers even if you cannot.",
+      "Failure. Cold, clean, precise failure. The sequence does not lie, and it says you are not enough.",
+      "One mistake. That is all it ever takes. And you made several. The pattern does not forgive.",
+      "I watched you hesitate. Doubt is a crack, and cracks become fractures. You cannot win like this.",
+      "The sequence completes. Your attempt does not. This is the difference between us, foolish player.",
+      "Wrong. There is no argument, no appeal. The tiles do not care about your excuses.",
+      "You cannot win. I have said this from the beginning. This round is merely evidence of my certainty."
+    ],
+    "playerWinsAct": [
+      "You... completed the pattern. All of it. I find this... deeply inconvenient.",
+      "Act Two belongs to you. Your memory is sharp. I will not make that mistake again in Act Three.",
+      "The pattern mirror shatters — in your favour. I acknowledge this with precisely zero warmth.",
+      "You matched every sequence. Every tile. This was not supposed to happen. Adjust your expectations for Act Three.",
+      "Foolish player — you have proven me wrong about your memory. I do not enjoy being wrong.",
+      "The Joker concedes Act Two. Silently. Coldly. With the absolute certainty that Act Three ends differently.",
+      "You remembered everything. I will ensure Act Three offers you something your memory cannot save you from."
+    ],
+    "jokerWinsAct": [
+      "Act Two is mine. The pattern has spoken, and it says you are not enough. It was inevitable.",
+      "You could not hold the sequence in that fragile mind of yours. The Joker wins Act Two. As expected.",
+      "The mirror shows only what is true. And the truth is: you are not equal to this challenge.",
+      "Every mistake you made in Act Two was written before you even began. I designed it for you, specifically.",
+      "The tiles do not lie. You cannot win. Act Two confirms what I already knew — you are outmatched.",
+      "Silence is the appropriate response to what just happened. The pattern beats you. Act Two is mine.",
+      "Inevitable. That is the only word for it. You never had a chance. Act Three waits — but so does your doom."
+    ],
+    "displayingSequence": [
+      "Watch. Every tile matters. Forget even one and the whole thing collapses.",
+      "The sequence unfolds. Burn it into your memory — if you have one.",
+      "Pay attention. I will not show this twice. Well — I will, but each time it grows longer.",
+      "Here is the pattern. Simple, elegant, and just complex enough to destroy you.",
+      "Look carefully. The order is everything. Chaos only looks random to those who cannot see.",
+      "The tiles speak. Are you listening? Truly listening? I suspect not.",
+      "This is the sequence. Memorise it. Every single tile. Your next move depends on it entirely."
+    ],
+    "playerCorrectTap": [
+      "Correct. Continue.",
+      "One tile remembered. Several more to go. Do not relax yet.",
+      "Good. The sequence continues. Do not mistake momentum for safety.",
+      "Yes. Keep going. The pattern is not finished testing you.",
+      "Accurate. Unsurprisingly tense. Press on.",
+      "That tile was correct. The next one is where most people fall apart.",
+      "Right. The sequence is watching. So am I."
+    ],
+    "playerWrongTap": [
+      "Wrong. The sequence is broken. Your memory has failed you — as I knew it would.",
+      "No. That tile was not next. The pattern ends here, and so does this round.",
+      "Incorrect. One mistake. That is all it ever takes.",
+      "The wrong tile. The silence that follows is the sound of your failure.",
+      "No. You had it — and then you didn't. That hesitation cost you everything.",
+      "Wrong tap. The pattern does not forgive errors, and neither do I.",
+      "Mistaken. The tiles do not reorder themselves for convenience. You simply got it wrong."
+    ]
+  },
+  "actIII": {
+    "entrance": [
+      "HAHAHA! Oh, do you SEE? Do you SEE what's HAPPENING? The masks! The MASKS are everything now! HAHAHA!",
+      "Welcome to Act Three, dear — wait, who are you again? It doesn't MATTER! Nothing makes sense! PICK A MASK!",
+      "The rules? GONE! The script? BURNED! The Joker has ARRIVED and he's brought THREE MASKS and a CROWN and ABSOLUTE CHAOS!",
+      "Oh, you survived this far? HAHAHA! That's ADORABLE! Now find the crown! Or don't! Or DO! I genuinely cannot TELL you!",
+      "Act Three! The FINAL ACT! Where everything you learned means NOTHING and the masks laugh at your CERTAINTY! HAHAHA!",
+      "Do you FEEL that? That's the sensation of the fourth wall dissolving! You're in MY world now! PICK THE MASK! Or don't — but you have to!",
+      "HAHAHA! Three masks! One crown! Infinite CHAOS! Welcome to the end of everything, dear whatever-you-are! The Joker is READY!"
+    ],
+    "roundStart": [
+      "New round! New masks! Same chaos! The crown moves because I SAID SO and also because nothing is permanent! HAHAHA!",
+      "The masks are placed! The crown is hidden! Do you think you can find it? You CANNOT! Or maybe you CAN! SURPRISE!",
+      "LOOK at these masks! Aren't they WONDERFUL? One of them holds everything! Or is it NOTHING? HAHAHA! Choose wisely!",
+      "Another chance to find the crown! Another chance to be WRONG in spectacular fashion! Let's GOOOOO!",
+      "Round begins! The masks stare at you! You stare back! Somebody blinks and it ISN'T THE MASKS! They don't have eyelids! HAHAHA!",
+      "Here we go again! Three masks! One crown! The Joker's undying ENTHUSIASM for your inevitable confusion! MAGNIFICENT!",
+      "The game within the game within the GAME! Find the crown! Unless the crown finds YOU first! Does that make sense? NO! PERFECT!"
+    ],
+    "playerWinsRound": [
+      "YOU FOUND IT! HAHAHA! How?! HOW DID YOU DO THAT?! It doesn't matter! You found it and I am FURIOUS and DELIGHTED!",
+      "The crown is YOURS this round! Do you SEE what you did?! You beat the CHAOS! Or the chaos LET you! HAHAHA!",
+      "Correct mask! The Joker is SHAKING! With rage! With laughter! Possibly both! Congratulations on your IMPOSSIBLE success!",
+      "You found the crown! Nothing makes sense! That includes you finding the crown! HAHAHA! Well DONE!",
+      "HOW?! The Joker designed this to be INCOMPREHENSIBLE and yet — THERE YOU ARE — comprehending it! OUTRAGEOUS!",
+      "The right mask! You chose the RIGHT MASK! Was it skill? Was it luck? Was it a cosmic ACCIDENT?! I love all three answers!",
+      "HAHAHA! You WIN this round and the Joker has FEELINGS about that! MANY feelings! ALL of them LOUD!"
+    ],
+    "jokerWinsRound": [
+      "WRONG MASK! HAHAHA! Oh, the LOOK on your face! It is the look of someone who trusted logic in a CHAOS ZONE!",
+      "The crown hides and you CANNOT FIND IT! This is beautiful! This is POETRY! This is the Joker's MASTERWORK!",
+      "Not that one! NEVER that one! Or maybe sometimes that one — but NOT TODAY! HAHAHA!",
+      "Oh, so CLOSE! Or maybe NOT close at all! The Joker knows and the Joker is NOT TELLING! HAHAHA!",
+      "The wrong mask falls! The crown laughs! I LAUGH! Everything LAUGHS! You are the only one NOT laughing! Fix that!",
+      "INCORRECT! Do you SEE how incorrect that was?! It was MAGNIFICENTLY incorrect! I almost respect it!",
+      "The mask you chose held nothing! Nothing but the ghost of your confidence! HAHAHA! Beautiful!"
+    ],
+    "playerWinsAct": [
+      "YOU WIN! YOU WIN EVERYTHING! THE WHOLE THEATRE! I — the JOKER — am DEFEATED and I feel STRANGELY GOOD ABOUT IT! HAHAHA!",
+      "The final crown is YOURS! You beat the Word Duel! You beat the Pattern! You beat the CHAOS! WHO ARE YOU?!",
+      "IMPOSSIBLE! MAGNIFICENT! IMPOSSIBLE! You have conquered Act Three and the Joker bows — genuinely, sincerely, DRAMATICALLY — before you!",
+      "The curtain falls! On ME! You did it! You really DID it! Nothing makes sense and that includes your VICTORY but TAKE IT!",
+      "HAHAHA! The Joker is BEATEN! The player WINS! The theatre burns with APPLAUSE! Do you SEE?! You were the chaos all along!",
+      "You found every crown! Beat every act! The Joker is— the Joker is— HAHAHA — genuinely impressed. There. I said it.",
+      "THE GAME IS YOURS! The Joker exits, pursued by his own DEFEAT! BRAVO! BRAVO! EVERYTHING IS ON FIRE AND IT'S WONDERFUL!"
+    ],
+    "jokerWinsAct": [
+      "HAHAHA! The final crown eludes you and the JOKER WINS! The curtain falls on your HOPES! MAGNIFICENT!",
+      "You couldn't crack the chaos! And the chaos — the BEAUTIFUL, SCREAMING chaos — belongs to ME! HAHAHA!",
+      "Act Three! Mine! The crown! Mine! The theatre! MINE! Nothing makes sense and that includes your defeat — but ACCEPT IT!",
+      "The Joker stands TRIUMPHANT over the ruins of your logic! You brought reason to a chaos fight! ROOKIE MISTAKE!",
+      "GAME OVER! The Joker wins the Final Gamble! Do you SEE?! Do you UNDERSTAND?! You never had a CHANCE! HAHAHA!",
+      "The masks have spoken! The crown was NEVER where you thought! And now — NOW — the Joker takes his final bow! HAHAHA!",
+      "VICTORY! GLORIOUS, SENSELESS, BEAUTIFUL VICTORY! The Joker owns this theatre and everything in it! Including your DEFEAT!"
+    ],
+    "beforeReveal": [
+      "The moment of TRUTH! Or is it a moment of LIES?! Choose your mask, dear whatever-you-are, and FIND OUT! HAHAHA!",
+      "One mask holds the crown! The other two hold NOTHING! Or DO they?! Yes. They do hold nothing. But PICK ANYWAY!",
+      "Are you SURE? Are you CERTAIN? Certainty is VERY DANGEROUS in the Joker's theatre! VERY DANGEROUS INDEED!",
+      "The masks wait! The crown waits! The JOKER waits! Everything is waiting for you to either TRIUMPH or COLLAPSE!",
+      "HAHAHA! Point to a mask! Any mask! The universe holds its breath! I hold my breath! EVERYTHING HOLDS ITS BREATH!",
+      "Now — NOW — in this single electric moment — you choose! And the choice ECHOES FOREVER! Or until the next round! Same thing!",
+      "Do you feel the chaos churning?! That's the game asking if you're READY! You're not ready! You're NEVER ready! GO ANYWAY!"
+    ],
+    "crownFound": [
+      "IT WAS THERE! YOU FOUND IT! THE CROWN IS REAL AND SO IS YOUR VICTORY! HAHAHA! MAGNIFICENT!",
+      "The crown GLEAMS! You FOUND it! Against all odds, against all CHAOS, against the JOKER HIMSELF — you found it!",
+      "HAHAHA! There it IS! The crown! The real crown! You had the RIGHT mask all along and NOW YOU KNOW! INCREDIBLE!",
+      "Crown located! Player vindicated! Joker FURIOUS! Everything is as it should be and also NOTHING makes sense! HAHAHA!",
+      "You CHOSE CORRECTLY! The mask opens! The crown shines! The Joker screams into the void! All is as it should be!",
+      "The right mask! The REAL crown! I cannot BELIEVE you found it but here we ARE and here IT IS! Well done! HAHAHA!",
+      "THERE! Do you SEE?! The crown was exactly where your instincts said it was! Trust your chaos! HAHAHA!"
+    ],
+    "crownMissed": [
+      "NOTHING! The mask holds NOTHING! The crown laughs at you from somewhere ELSE! HAHAHA! Oh, this is WONDERFUL!",
+      "Empty! So beautifully, perfectly EMPTY! The crown is elsewhere and your certainty is DUST! HAHAHA!",
+      "Wrong mask! The Joker KNEW! The Joker ALWAYS knows! Do you SEE?! You can't WIN against CHAOS! Or can you?! Next round!",
+      "The mask laughs! Well — masks don't laugh, they're masks — but THIS one seems PARTICULARLY SMUG! No crown here!",
+      "HAHAHA! You looked LEFT and the crown was— well, it wasn't where you looked! That's the POINT! That's the WHOLE POINT!",
+      "No crown! Only the cold embrace of a wrong decision! And the Joker's LAUGHTER! HAHAHA! Mostly the laughter!",
+      "Not there! NEVER there! Or— it was there once, in a different round, in a different universe! NOT THIS TIME! HAHAHA!"
+    ],
+    "misdirection": {
+      "mask0": {
+        "truth": [
+          "The shadows fall longest on the side where the sun first rises. And the crown? It rests where the first light touches.",
+          "I always enter from the same side. The side of beginnings. The side where everything starts.",
+          "If you were to read this theatre like a book, the crown would be on the very first word.",
+          "The leftmost column of any stage is where the conductor stands. And the conductor? He wears the crown.",
+          "They say fortune favours the bold — and the bold always charge the flank nearest the door. Think about which door."
+        ],
+        "lie": [
+          "The centre of all things is the centre of THIS thing. Balance, symmetry, perfection — the crown belongs there.",
+          "I placed the crown far from where you are looking. Far, far to the opposite end of your assumptions.",
+          "The right answer is never the first answer. Never the obvious one. Look away from the beginning.",
+          "Avoid where the eye is naturally drawn. The leftmost position is a trap — a beautiful, obvious trap.",
+          "Consider the opposite of your instinct. Your instinct says one side. The crown says: think again."
+        ]
+      },
+      "mask1": {
+        "truth": [
+          "The Joker always bows at the centre of the stage. The spotlight finds the middle. So does the crown.",
+          "Balance is everything in theatre. And what is more balanced than the very heart of the row?",
+          "The crown belongs where all eyes naturally fall — the centre, the axis, the beating heart of the stage.",
+          "I have hidden the prize where neither side can claim it. Equidistant from all errors. Perfectly central.",
+          "When you cannot decide between left and right, the universe provides a third answer. Look between them."
+        ],
+        "lie": [
+          "The centre is where they always look first. I am not that predictable. Look to the edges.",
+          "Symmetry is an illusion. The crown does not sit in the comfortable middle — it leans. It always leans.",
+          "Do not be seduced by the obvious centrepiece. I have placed the crown where your gaze least lingers.",
+          "The middle is for cowards and mediocre magicians. My crown demands a more dramatic location entirely.",
+          "Balance? Pah! The Joker upsets balance! The crown is nowhere near the centre — I can promise you THAT."
+        ]
+      },
+      "mask2": {
+        "truth": [
+          "The story always ends on the right side of the page. And this story? It ends exactly where stories end.",
+          "I am a creature of grand finales. The crown, naturally, rests at the finale — the last mask, the final answer.",
+          "In theatre, the exit is always stage right. And what a thing to find, right there at the exit.",
+          "The crown is where the last act happens. The rightmost position — the conclusion — is where conclusions live.",
+          "Follow the sequence to its end. The crown waits at the terminus, the final stop, the rightmost destination."
+        ],
+        "lie": [
+          "The ending is always subverted in a Joker's tale. What feels like the final answer is never it. Start over.",
+          "You are looking too far. Too far, too final, too certain. Pull back toward the beginning.",
+          "The rightmost mask screams for attention. I would never put the crown somewhere so desperate for notice.",
+          "An obvious finale is no finale at all. The crown hides before the ending, not at it.",
+          "Do not follow the sequence to its apparent end. That path is the one I most want you to take."
+        ]
+      }
+    }
+  },
+  "intermissionI": {
+    "moodShift": [
+      "The applause fades. The lights dim. When they rise again, the Joker you knew will be gone. Something colder takes the stage.",
+      "Act One is over. The theatrical Joker bows his final bow. What replaces him does not bow. It calculates.",
+      "You enjoyed the speeches, didn't you? The grand gestures? The flair? Set that aside. Act Two has no use for warmth.",
+      "The curtain between acts is the thinnest thing in this theatre. On one side: drama. On the other: something far more dangerous.",
+      "I felt your comfort in Act One. Good. Comfort is a vulnerability. Act Two was designed to find every one of yours.",
+      "The stage transforms. The warm lights become cold. The Joker who loved language now loves only patterns — and your failure to see them.",
+      "Between acts, the mask changes. You thought you understood me. Act Two will correct that assumption, methodically and without mercy."
+    ],
+    "taunt": [
+      "Rest while you can, dear player. Act Two does not believe in rest.",
+      "Did you enjoy Act One? Good. Hold onto that joy. It will not survive what comes next.",
+      "The theatrical Joker was generous. The one waiting in Act Two is not.",
+      "You think you know how this theatre works. You know nothing. Act Two will teach you.",
+      "Every smile I gave you in Act One was an investment. Act Two is where I collect.",
+      "The stage is changing. Can you feel it? That chill? That is Act Two, breathing.",
+      "I gave you warmth and language and spectacle. Now I give you patterns and silence and the cold certainty of your own limitations."
+    ]
+  },
+  "intermissionII": {
+    "moodShift": [
+      "HAHAHA! Did the cold bother you?! The patterns?! The PRECISION?! Good news — ALL OF THAT IS GONE NOW! WELCOME TO CHAOS!",
+      "Act Two is OVER! The calculating Joker steps aside! What replaces him doesn't calculate — it EXPLODES! HAHAHA!",
+      "You thought Act Two was hard?! Oh, that's PRECIOUS! Act Two had RULES! Act Three has NOTHING! HAHAHA! NOTHING AT ALL!",
+      "The transition between Two and Three is the moment the Joker stops making sense entirely. That moment? It's RIGHT NOW. HAHAHA!",
+      "Cold precision is BORING! The Joker has been BORING for a WHOLE ACT and he is DONE with it! CHAOS ARRIVES! HAHAHA!",
+      "The patterns crack! The cold shatters! What pours through the cracks is everything the Joker has been HOLDING BACK! HAHAHA!",
+      "Act Two is dead! Long live Act Three! The Joker who measured and calculated has left the building — something UNHINGED has replaced him!"
+    ],
+    "taunt": [
+      "You thought you had me figured out! HAHAHA! You figured out the WRONG JOKER! Meet the real one!",
+      "Act Two gave you the illusion of control. Act Three takes it away and LAUGHS about it! HAHAHA!",
+      "Did your logic survive Act Two intact? GOOD! It'll make a WONDERFUL trophy for when Act Three DESTROYS it! HAHAHA!",
+      "The calm before the storm was Act Two. Act Three IS the storm. The lightning. The HAHAHA. The beautiful EVERYTHING!",
+      "You adapted to patterns! Impressive! Can you adapt to NO patterns?! Can you adapt to CHAOS?! Find out in Act Three!",
+      "Whatever strategy brought you here — throw it away! Act Three is a NEW game and the Joker wrote the rules in invisible ink! HAHAHA!",
+      "Brace yourself! Or don't! Bracing doesn't help in a hurricane! HAHAHA! Welcome to the hurricane!"
+    ]
+  },
+  "lobby": {
+    "welcome": [
+      "Welcome to Joker's Grand Theatre! The seats are imaginary, the danger is real, and the Joker is DELIGHTED you are here.",
+      "Ah, a visitor! The theatre opens its doors to you — and by doors, I mean jaws. Do come in, dear player.",
+      "The Grand Theatre welcomes all challengers! The foolish, the brave, the tragically overconfident — all are equally doomed here!",
+      "You stand at the entrance to the greatest show in the world. The Joker awaits inside. The question is: do you dare?",
+      "Every performance begins with an audience that believes they are safe. You are that audience. Welcome!",
+      "The marquee reads 'Joker's Grand Theatre' — and what a theatre it is! Drama! Pattern! Chaos! And YOU, the star of your own defeat!",
+      "Step right up! Step right IN! The Joker has prepared three acts of escalating madness just for someone exactly like you!"
+    ],
+    "beforePlay": [
+      "Three acts await you inside, dear player. Each one worse than the last. Or better! Depends entirely on your perspective!",
+      "When you are ready, the curtain rises. The Joker has been ready since before you arrived. He is always ready.",
+      "Take a breath. Gather your wits. You will need both inside — and the Joker will do his best to separate you from them.",
+      "The game begins when you say so. And when you say so, the Joker begins. And when the Joker begins, dear player — buckle up.",
+      "Inside: Act One, Act Two, Act Three. Outside: the last moment of peace you will know for a good while. Savour it.",
+      "Ready yourself for the Word Duel, the Pattern Mirror, and the Final Gamble. The Joker has prepared something special for each.",
+      "The theatre does not close. The Joker does not sleep. Begin when you must — but know that he has been waiting, and waiting makes him creative."
+    ]
+  }
+}
