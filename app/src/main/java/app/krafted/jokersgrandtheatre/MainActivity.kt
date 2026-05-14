@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import app.krafted.jokersgrandtheatre.di.AppContainer
 import app.krafted.jokersgrandtheatre.model.Act
 import app.krafted.jokersgrandtheatre.ui.ActIntroScreen
+import app.krafted.jokersgrandtheatre.ui.GrandFinaleScreen
 import app.krafted.jokersgrandtheatre.ui.IntermissionScreen
 import app.krafted.jokersgrandtheatre.ui.TheatreLobbyScreen
 import app.krafted.jokersgrandtheatre.ui.actI.WordDuelScreen
@@ -49,10 +50,11 @@ object Routes {
     const val GAMBLE_REVEAL = "gambleReveal"
     const val GAMBLE_RESULT = "gambleResult"
     const val INTERMISSION = "intermission/{intermissionId}/{stakes}"
-    const val FINALE = "finale"
+    const val FINALE = "finale/{priorStakes}/{actIIIScore}"
 
     fun actIntro(actId: String, stakes: Int) = "actIntro/$actId/$stakes"
     fun intermission(intermissionId: String, stakes: Int) = "intermission/$intermissionId/$stakes"
+    fun finale(priorStakes: Int, actIIIScore: Int) = "finale/$priorStakes/$actIIIScore"
 }
 
 private object Graphs {
@@ -65,6 +67,8 @@ private object NavArgs {
     const val STAKES = "stakes"
     const val ACT_ID = "actId"
     const val INTERMISSION_ID = "intermissionId"
+    const val PRIOR_STAKES = "priorStakes"
+    const val ACT_III_SCORE = "actIIIScore"
 }
 
 class MainActivity : ComponentActivity() {
@@ -139,10 +143,19 @@ fun TheatreNavHost(container: AppContainer) {
         placeholderDestination(Routes.WORD_DUEL_RESULT, "Word Duel Result", onTap = null)
         placeholderDestination(Routes.PATTERN_RESULT, "Pattern Result", onTap = null)
         placeholderDestination(Routes.GAMBLE_RESULT, "Gamble Result", onTap = null)
-        placeholderDestination(Routes.FINALE, "Finale") {
-            navController.navigate(Routes.LOBBY) {
-                popUpTo(Routes.LOBBY) { inclusive = true }
-            }
+
+        composable(Routes.FINALE) { entry ->
+            val priorStakes = entry.arguments?.getString(NavArgs.PRIOR_STAKES)?.toIntOrNull() ?: 0
+            val actIIIScore = entry.arguments?.getString(NavArgs.ACT_III_SCORE)?.toIntOrNull() ?: 0
+            GrandFinaleScreen(
+                priorStakes = priorStakes,
+                actIIIScore = actIIIScore,
+                onReturnToLobby = {
+                    navController.navigate(Routes.LOBBY) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         actINavGraph(navController, container)
@@ -237,20 +250,30 @@ private fun NavGraphBuilder.actIIINavGraph(
     val graphRoute = "${Graphs.ACT_III}/{${NavArgs.STAKES}}"
     navigation(startDestination = Routes.GAMBLE, route = graphRoute) {
         composable(Routes.GAMBLE) { backStackEntry ->
+            val graphEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(graphRoute)
+            }
+            val priorStakes = stakesArgOf(graphEntry)
             val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
             GambleScreen(
                 viewModel = viewModel,
                 onReveal = { navController.navigate(Routes.GAMBLE_REVEAL) },
-                onActComplete = { _, _, _ -> navController.navigate(Routes.FINALE) }
+                onActComplete = { gambleScore, _, _ ->
+                    navController.navigate(Routes.finale(priorStakes, gambleScore))
+                }
             )
         }
         composable(Routes.GAMBLE_REVEAL) { backStackEntry ->
+            val graphEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(graphRoute)
+            }
+            val priorStakes = stakesArgOf(graphEntry)
             val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
             GambleRevealScreen(
                 viewModel = viewModel,
                 onContinue = { navController.popBackStack() },
-                onActComplete = { _, _, _ ->
-                    navController.navigate(Routes.FINALE) {
+                onActComplete = { gambleScore, _, _ ->
+                    navController.navigate(Routes.finale(priorStakes, gambleScore)) {
                         popUpTo(graphRoute) { inclusive = true }
                     }
                 }
