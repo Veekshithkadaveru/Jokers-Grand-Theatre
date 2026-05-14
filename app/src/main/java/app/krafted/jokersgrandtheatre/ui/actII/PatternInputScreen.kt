@@ -23,10 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,24 +36,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.krafted.jokersgrandtheatre.game.TapResult
-import app.krafted.jokersgrandtheatre.ui.components.JokerDialogue
-import app.krafted.jokersgrandtheatre.ui.components.JokerPortrait
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimson
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreDark
+import app.krafted.jokersgrandtheatre.ui.components.CinzelLabel
+import app.krafted.jokersgrandtheatre.ui.components.DialogueBox
+import app.krafted.jokersgrandtheatre.ui.components.EmberParticles
+import app.krafted.jokersgrandtheatre.ui.components.GoldButton
+import app.krafted.jokersgrandtheatre.ui.components.OrnateFrame
+import app.krafted.jokersgrandtheatre.ui.components.StageBackground
+import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
+import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
+import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonDeep
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreMidnightBlue
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreOnSurface
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreOnSurfaceMuted
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreSilver
 import app.krafted.jokersgrandtheatre.viewmodel.PatternPhase
 import app.krafted.jokersgrandtheatre.viewmodel.PatternState
 import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
@@ -65,8 +68,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val SYMBOL_COUNT = 7
-private const val GRID_COLS = 2
-private const val GRID_ROWS = 4
+private const val GRID_COLS = 4
+private const val GRID_ROWS = 2
+
+private val ActAccent = Color(0xFF9BE37A)
+private val ActBg = Color(0xC5020C08)
 
 @Composable
 fun PatternInputScreen(
@@ -75,45 +81,40 @@ fun PatternInputScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TheatreDark)
-            .systemBarsPadding()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        StageBackground(
+            app.krafted.jokersgrandtheatre.R.drawable.jok019_back_3,
+            tint = ActBg
+        )
+        EmberParticles(density = 10, opacity = 0.3f)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .systemBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
             PatternTopBar(state)
-            Spacer(Modifier.height(12.dp))
-            PatternJokerSection(state)
+            Spacer(Modifier.height(8.dp))
+            PatternJokerStrip(state)
             Spacer(Modifier.height(10.dp))
-            PatternScoreRow(state)
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = TheatreSilver.copy(alpha = 0.25f)
-            )
+
             val showGrid = state.phase == PatternPhase.PLAYER_INPUT ||
                 (state.phase != PatternPhase.DISPLAY && state.lastTapResult == TapResult.SEQUENCE_COMPLETE)
+
             if (showGrid) {
                 InputProgressLabel(state)
                 Spacer(Modifier.height(12.dp))
                 SymbolGrid(
                     state = state,
                     onTap = viewModel::onSymbolTap,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                    modifier = Modifier.fillMaxWidth().weight(1f)
                 )
             } else {
                 ProgressStrip(state)
                 Spacer(Modifier.height(16.dp))
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     ActiveSymbolDisplay(activeSymbolIndex = state.activeSymbolIndex)
@@ -133,7 +134,7 @@ fun PatternInputScreen(
         }
 
         if (state.phase == PatternPhase.ROUND_END && overlayDelayDone) {
-            PatternRoundEndOverlay(
+            PatternRoundResultOverlay(
                 state = state,
                 onContinue = {
                     viewModel.clearLastTapResult()
@@ -143,15 +144,11 @@ fun PatternInputScreen(
         }
 
         if (state.phase == PatternPhase.ACT_END && overlayDelayDone) {
-            PatternActEndOverlay(
+            PatternActCompleteOverlay(
                 state = state,
                 onContinue = {
                     viewModel.acknowledgeActEnd()
-                    onActComplete(
-                        state.actScore,
-                        state.playerRoundsWon,
-                        state.jokerRoundsWon
-                    )
+                    onActComplete(state.actScore, state.playerRoundsWon, state.jokerRoundsWon)
                 }
             )
         }
@@ -160,24 +157,36 @@ fun PatternInputScreen(
 
 @Composable
 private fun InputProgressLabel(state: PatternState) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, ActAccent.copy(alpha = 0.33f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = "YOUR TURN",
-            color = TheatreSilver,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            letterSpacing = 2.sp
-        )
-        Text(
-            text = "${state.inputProgress} / ${state.sequence.size}",
-            color = TheatreGold,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CinzelLabel("REVERSE TAPS", color = ActAccent, fontSize = 10.sp, letterSpacing = 2.sp)
+            CinzelLabel("${state.inputProgress} / ${state.sequence.size}", color = Color(0xA6FFE7A8), fontSize = 10.sp)
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            for (i in 0 until state.sequence.size) {
+                val filled = i >= state.sequence.size - state.inputProgress
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(if (filled) Color(0xFF7CD34E) else Color(0x1FFFFFFF))
+                )
+            }
+        }
     }
 }
 
@@ -188,23 +197,18 @@ private fun SymbolGrid(
     modifier: Modifier = Modifier
 ) {
     val shakeOffset = remember { Animatable(0f) }
-
     LaunchedEffect(state.lastTapResult, state.mistakesMade) {
         if (state.lastTapResult == TapResult.WRONG) {
             shakeOffset.snapTo(0f)
-            shakeOffset.animateTo(
-                targetValue = 0f,
-                animationSpec = spring(dampingRatio = 0.1f),
-                initialVelocity = 1800f
-            )
+            shakeOffset.animateTo(0f, spring(dampingRatio = 0.1f), initialVelocity = 1800f)
         }
     }
 
     val redFlash = remember { Animatable(0f) }
     LaunchedEffect(state.lastTapResult, state.mistakesMade) {
         if (state.lastTapResult == TapResult.WRONG) {
-            redFlash.snapTo(1f)
-            redFlash.animateTo(0f, tween(durationMillis = 450))
+            redFlash.snapTo(0.3f)
+            redFlash.animateTo(0f, tween(450))
         }
     }
 
@@ -218,7 +222,7 @@ private fun SymbolGrid(
             cascadeProgress.forEachIndexed { idx, anim ->
                 scope.launch {
                     delay(idx * 120L)
-                    anim.animateTo(1f, tween(durationMillis = 280))
+                    anim.animateTo(1f, tween(280))
                 }
             }
         } else {
@@ -229,7 +233,7 @@ private fun SymbolGrid(
     Box(
         modifier = modifier
             .offset { IntOffset(shakeOffset.value.dp.roundToPx(), 0) }
-            .background(TheatreCrimson.copy(alpha = redFlash.value * 0.25f))
+            .background(Color.Red.copy(alpha = redFlash.value))
             .padding(4.dp)
     ) {
         Column(
@@ -238,9 +242,7 @@ private fun SymbolGrid(
         ) {
             for (row in 0 until GRID_ROWS) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     for (col in 0 until GRID_COLS) {
@@ -249,15 +251,47 @@ private fun SymbolGrid(
                             SymbolCell(
                                 index = index,
                                 state = state,
-                                cascade = cascadeProgress[index].value,
+                                cascadeGold = cascadeProgress[index].value,
                                 enabled = enabled,
                                 onTap = { onTap(index) },
+                                modifier = Modifier.weight(1f).aspectRatio(1f)
+                            )
+                        } else {
+
+                            Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .border(2.dp, ActAccent.copy(alpha = 0.27f), RoundedCornerShape(12.dp))
+                                    .background(Color(0x73000000)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        "REVERSE",
+                                        color = ActAccent,
+                                        fontFamily = CinzelFamily,
+                                        fontSize = 8.sp,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        "${state.inputProgress}/${state.sequence.size}",
+                                        color = ActAccent,
+                                        fontFamily = CinzelDecorativeFamily,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 20.sp
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        "${state.sequence.size - state.inputProgress} left",
+                                        color = ActAccent,
+                                        fontFamily = CinzelFamily,
+                                        fontSize = 8.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -270,222 +304,188 @@ private fun SymbolGrid(
 private fun SymbolCell(
     index: Int,
     state: PatternState,
-    cascade: Float,
+    cascadeGold: Float,
     enabled: Boolean,
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isLastTapped = state.playerSequence.lastOrNull() == index &&
-        (state.lastTapResult == TapResult.CORRECT || state.lastTapResult == TapResult.SEQUENCE_COMPLETE)
+    val isLastCorrect = state.playerSequence.lastOrNull() == index &&
+        state.lastTapResult == TapResult.CORRECT
+    val isLastWrong = state.playerSequence.lastOrNull() == index &&
+        state.lastTapResult == TapResult.WRONG
+    val isCascade = cascadeGold > 0f
 
-    val pulseTarget = if (isLastTapped) 1.15f else 1.0f
     val scale by animateFloatAsState(
-        targetValue = pulseTarget,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = 600f
-        ),
-        label = "SymbolCellScale-$index"
+        targetValue = if (isLastCorrect) 1.15f else 1.0f,
+        animationSpec = spring(Spring.DampingRatioMediumBouncy, 600f),
+        label = "SymbolScale$index"
     )
 
-    val greenPulse = remember { Animatable(0f) }
-    LaunchedEffect(state.lastTapResult, state.inputProgress) {
-        if (isLastTapped && state.lastTapResult == TapResult.CORRECT) {
-            greenPulse.snapTo(1f)
-            greenPulse.animateTo(
-                targetValue = 0f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = 600f
-                )
-            )
-        } else if (!isLastTapped) {
-            greenPulse.snapTo(0f)
-        }
+    val borderColor = when {
+        isCascade -> TheatreGold.copy(alpha = cascadeGold)
+        isLastCorrect -> Color(0xFF7CD34E)
+        isLastWrong -> Color(0xFFFF5A3A)
+        else -> ActAccent.copy(alpha = 0.33f)
     }
-
-    val baseBackground = TheatreMidnightBlue
-    val tappedTint = Color(0xFF2EA043)
-    val baseColor = lerp(baseBackground, tappedTint, greenPulse.value)
-    val background = lerp(baseColor, TheatreGold, cascade)
 
     Box(
         modifier = modifier
             .scale(scale)
-            .clip(RoundedCornerShape(14.dp))
-            .background(background)
-            .border(
-                width = 1.dp,
-                color = TheatreSilver.copy(alpha = 0.35f),
-                shape = RoundedCornerShape(14.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(Color(0x0FFFFFFF), Color(0x73000000)),
+                    radius = 200f
+                )
             )
+            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
             .clickable(enabled = enabled, onClick = onTap),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = symbolDrawable(index)),
             contentDescription = "Symbol ${index + 1}",
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp)
+            modifier = Modifier.fillMaxSize().padding(14.dp),
+            contentScale = ContentScale.Fit
         )
     }
 }
 
 @Composable
-private fun PatternRoundEndOverlay(state: PatternState, onContinue: () -> Unit) {
+private fun PatternRoundResultOverlay(state: PatternState, onContinue: () -> Unit) {
     val playerWon = state.lastTapResult == TapResult.SEQUENCE_COMPLETE
-    val headline = if (playerWon) "YOU WIN THE ROUND" else "JOKER WINS THE ROUND"
-    val headlineColor = if (playerWon) TheatreGold else TheatreCrimson
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.Black.copy(alpha = 0.85f)
+    val tone = if (playerWon) Color(0xFF7CD34E) else Color(0xFFFF5A3A)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.6f)),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "ROUND ${state.round}",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp,
-                letterSpacing = 3.sp
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = headline,
-                color = headlineColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "Round score  ${state.roundScore}",
-                color = TheatreOnSurface,
-                fontSize = 18.sp
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Mistakes  ${state.mistakesMade}",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Total  ${state.actScore}",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Rounds  You ${state.playerRoundsWon}  —  ${state.jokerRoundsWon} Joker",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp
-            )
-            Spacer(Modifier.height(24.dp))
-            JokerPortrait(
-                expression = state.jokerExpression,
-                modifier = Modifier.size(72.dp)
-            )
-            Spacer(Modifier.height(12.dp))
-            JokerDialogue(
-                text = state.jokerLine,
-                color = TheatreOnSurface,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(28.dp))
-            Button(
-                onClick = onContinue,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TheatreMidnightBlue,
-                    contentColor = TheatreGold
+                .fillMaxWidth(0.92f)
+                .padding(bottom = 36.dp)
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFF2A0306), Color(0xFF4A0008))),
+                    RoundedCornerShape(14.dp)
                 )
-            ) {
-                Text("NEXT ROUND", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                .border(2.dp, tone, RoundedCornerShape(14.dp))
+                .padding(16.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CinzelLabel(
+                    text = "· ROUND ${state.round} RESULT ·",
+                    color = Color(0x8CFFE7A8),
+                    fontSize = 9.sp,
+                    letterSpacing = 3.sp
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = if (playerWon) "You Win the Round" else "The Joker Wins",
+                    fontFamily = CinzelDecorativeFamily,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 22.sp,
+                    color = tone,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = if (playerWon) "Sequence mirrored perfectly." else "The mirror broke.",
+                    fontFamily = PlayfairFamily,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 12.sp,
+                    color = Color(0xBFFFE7A8),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(12.dp))
+                DialogueBox(
+                    expression = state.jokerExpression,
+                    accent = ActAccent,
+                    text = state.jokerLine,
+                    portraitSize = 56.dp
+                )
+                Spacer(Modifier.height(12.dp))
+                GoldButton(onClick = onContinue) {
+                    Text(
+                        text = "CONTINUE",
+                        fontFamily = CinzelFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        letterSpacing = 2.5.sp,
+                        color = TheatreCrimsonDeep
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun PatternActEndOverlay(state: PatternState, onContinue: () -> Unit) {
+private fun PatternActCompleteOverlay(state: PatternState, onContinue: () -> Unit) {
     val playerWonAct = state.playerRoundsWon > state.jokerRoundsWon
-    val tied = state.playerRoundsWon == state.jokerRoundsWon
-    val headline = when {
-        tied -> "A DRAW"
-        playerWonAct -> "YOU WIN THE ACT"
-        else -> "JOKER WINS THE ACT"
-    }
-    val headlineColor = if (playerWonAct) TheatreGold else TheatreCrimson
-
+    val tone = if (playerWonAct) Color(0xFF7CD34E) else Color(0xFFFF5A3A)
     var fired by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.Black.copy(alpha = 0.92f)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.88f)),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "ACT II COMPLETE",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp,
-                letterSpacing = 3.sp
+            CinzelLabel(
+                text = "· ACT II · CURTAIN ·",
+                color = Color(0x8CFFE7A8),
+                fontSize = 10.sp,
+                letterSpacing = 4.sp
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = headline,
-                color = headlineColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
+                text = if (playerWonAct) "Act Claimed" else "Act Lost",
+                fontFamily = CinzelDecorativeFamily,
+                fontWeight = FontWeight.Black,
+                fontSize = 32.sp,
+                color = tone,
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "Rounds  You ${state.playerRoundsWon}  —  ${state.jokerRoundsWon} Joker",
-                color = TheatreOnSurface,
-                fontSize = 16.sp
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Act score  ${state.actScore}",
-                color = TheatreOnSurface,
-                fontSize = 16.sp
-            )
-            Spacer(Modifier.height(24.dp))
-            JokerPortrait(
-                expression = state.jokerExpression,
-                modifier = Modifier.size(96.dp)
-            )
-            Spacer(Modifier.height(12.dp))
-            JokerDialogue(
-                text = state.jokerLine,
-                color = TheatreOnSurface,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(28.dp))
-            Button(
+            Spacer(Modifier.height(16.dp))
+            OrnateFrame(accent = ActAccent, padding = 16.dp) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CinzelLabel(
+                        text = "YOUR SCORE FOR ACT II",
+                        color = Color(0x8CFFE7A8),
+                        fontSize = 10.sp,
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = state.actScore.toString(),
+                        fontFamily = CinzelDecorativeFamily,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 56.sp,
+                        color = ActAccent,
+                        style = TextStyle(shadow = Shadow(Color.Black, Offset.Zero, 18f))
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            GoldButton(
                 onClick = {
-                    if (!fired) {
-                        fired = true
-                        onContinue()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TheatreMidnightBlue,
-                    contentColor = TheatreGold
-                )
+                    if (!fired) { fired = true; onContinue() }
+                }
             ) {
-                Text("CONTINUE", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                Text(
+                    text = "CONTINUE",
+                    fontFamily = CinzelFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    letterSpacing = 2.5.sp,
+                    color = TheatreCrimsonDeep
+                )
             }
         }
     }

@@ -23,7 +23,7 @@ class GambleEngine(private val dialogue: DialogueRepository) {
             candidates[Random.Default.nextInt(candidates.size)]
         }
         return Misdirection(
-            line = dialogue.misdirectionLine(hintedPosition, truth = true),
+            line = dialogue.misdirectionLine(hintedPosition, truth = isTruth),
             isTruth = isTruth,
             hintedPosition = hintedPosition
         )

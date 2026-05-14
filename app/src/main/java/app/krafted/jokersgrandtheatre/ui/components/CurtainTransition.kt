@@ -10,13 +10,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
 
 @Composable
 fun CurtainTransition(
     isOpen: Boolean,
     modifier: Modifier = Modifier,
-    animationDurationMs: Int = 800,
+    accent: Color = TheatreGold,
+    animationDurationMs: Int = 1100,
     onAnimationFinished: () -> Unit = {}
 ) {
     val progress = remember { Animatable(if (isOpen) 1f else 0f) }
@@ -30,35 +34,64 @@ fun CurtainTransition(
     }
 
     Canvas(modifier = modifier.fillMaxSize()) {
-        val width = size.width
-        val height = size.height
+        val w = size.width
+        val h = size.height
+        val panelWidth = (w * 0.52f) * (1f - progress.value)
 
-        val curtainColor = Color(0xFF8B0000)
-        val trimColor = Color(0xFFFFD700)
+        if (panelWidth > 0f) {
 
-        val curtainWidth = (width / 2) * (1f - progress.value)
-
-        if (curtainWidth > 0) {
             drawRect(
-                color = curtainColor,
-                topLeft = Offset(0f, 0f),
-                size = Size(curtainWidth, height)
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF2A0306), Color(0xFF6A0A0A), Color(0xFF3A0306)),
+                    startX = 0f, endX = panelWidth
+                ),
+                size = Size(panelWidth, h)
             )
             drawRect(
-                color = trimColor,
-                topLeft = Offset(curtainWidth - 10f, 0f),
-                size = Size(10f, height)
+                color = accent,
+                topLeft = Offset(panelWidth - 6.dp.toPx(), 0f),
+                size = Size(6.dp.toPx(), h)
             )
 
             drawRect(
-                color = curtainColor,
-                topLeft = Offset(width - curtainWidth, 0f),
-                size = Size(curtainWidth, height)
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF3A0306), Color(0xFF6A0A0A), Color(0xFF2A0306)),
+                    startX = w - panelWidth, endX = w
+                ),
+                topLeft = Offset(w - panelWidth, 0f),
+                size = Size(panelWidth, h)
             )
             drawRect(
-                color = trimColor,
-                topLeft = Offset(width - curtainWidth, 0f),
-                size = Size(10f, height)
+                color = accent,
+                topLeft = Offset(w - panelWidth, 0f),
+                size = Size(6.dp.toPx(), h)
+            )
+        }
+
+        val valanceH = 48.dp.toPx()
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(Color(0xFF7A1208), Color(0xFF3A0306)),
+                startY = 0f, endY = valanceH
+            ),
+            size = Size(w, valanceH)
+        )
+
+        drawRect(
+            color = accent,
+            topLeft = Offset(0f, valanceH - 3.dp.toPx()),
+            size = Size(w, 3.dp.toPx())
+        )
+
+        val numTassels = 12
+        val tassel = 4.dp.toPx()
+        val tassel_h = 14.dp.toPx()
+        repeat(numTassels) { i ->
+            val tx = (w / numTassels) * i + (w / numTassels / 2f) - tassel / 2f
+            drawRect(
+                color = accent,
+                topLeft = Offset(tx, valanceH),
+                size = Size(tassel, tassel_h)
             )
         }
     }

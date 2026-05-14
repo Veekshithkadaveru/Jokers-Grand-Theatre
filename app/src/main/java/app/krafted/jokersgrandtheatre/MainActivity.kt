@@ -4,14 +4,31 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import app.krafted.jokersgrandtheatre.di.AppContainer
+import app.krafted.jokersgrandtheatre.ui.actI.WordDuelScreen
+import app.krafted.jokersgrandtheatre.ui.actII.PatternInputScreen
+import app.krafted.jokersgrandtheatre.ui.actIII.GambleRevealScreen
+import app.krafted.jokersgrandtheatre.ui.actIII.GambleScreen
 import app.krafted.jokersgrandtheatre.ui.theme.JokersGrandTheatreTheme
+import app.krafted.jokersgrandtheatre.viewmodel.GambleViewModel
+import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
+import app.krafted.jokersgrandtheatre.viewmodel.WordDuelViewModel
 
 object Routes {
     const val SPLASH = "splash"
@@ -33,14 +50,25 @@ object Routes {
     fun intermission(intermissionId: String) = "intermission/$intermissionId"
 }
 
+private object Graphs {
+    const val ACT_I = "graph_actI"
+    const val ACT_II = "graph_actII"
+    const val ACT_III = "graph_actIII"
+}
+
+private object GambleArgs {
+    const val STAKES = "stakes"
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val container = AppContainer(this)
         setContent {
             JokersGrandTheatreTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    TheatreNavHost()
+                    TheatreNavHost(container)
                 }
             }
         }
@@ -48,50 +76,151 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TheatreNavHost() {
+fun TheatreNavHost(container: AppContainer) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.SPLASH) {
-        composable(Routes.SPLASH) {
-            androidx.compose.material3.Text("Splash")
+        placeholderDestination(Routes.SPLASH, "Splash") {
+            navController.navigate(Graphs.ACT_I)
         }
-        composable(Routes.LOBBY) {
-            androidx.compose.material3.Text("Lobby")
+        placeholderDestination(Routes.LOBBY, "Lobby") {
+            navController.navigate(Graphs.ACT_I)
         }
-        composable(Routes.LEADERBOARD) {
-            androidx.compose.material3.Text("Leaderboard")
-        }
-        composable(Routes.ACT_INTRO) {
-            androidx.compose.material3.Text("Act Intro")
-        }
-        composable(Routes.WORD_DUEL) {
-            androidx.compose.material3.Text("Word Duel")
-        }
-        composable(Routes.WORD_DUEL_RESULT) {
-            androidx.compose.material3.Text("Word Duel Result")
-        }
-        composable(Routes.PATTERN_DISPLAY) {
-            androidx.compose.material3.Text("Pattern Display")
-        }
-        composable(Routes.PATTERN_INPUT) {
-            androidx.compose.material3.Text("Pattern Input")
-        }
-        composable(Routes.PATTERN_RESULT) {
-            androidx.compose.material3.Text("Pattern Result")
-        }
-        composable(Routes.GAMBLE) {
-            androidx.compose.material3.Text("Gamble")
-        }
-        composable(Routes.GAMBLE_REVEAL) {
-            androidx.compose.material3.Text("Gamble Reveal")
-        }
-        composable(Routes.GAMBLE_RESULT) {
-            androidx.compose.material3.Text("Gamble Result")
-        }
-        composable(Routes.INTERMISSION) {
-            androidx.compose.material3.Text("Intermission")
-        }
-        composable(Routes.FINALE) {
-            androidx.compose.material3.Text("Finale")
+        placeholderDestination(Routes.LEADERBOARD, "Leaderboard", onTap = null)
+        placeholderDestination(Routes.ACT_INTRO, "Act Intro", onTap = null)
+        placeholderDestination(Routes.WORD_DUEL_RESULT, "Word Duel Result", onTap = null)
+        placeholderDestination(Routes.PATTERN_RESULT, "Pattern Result", onTap = null)
+        placeholderDestination(Routes.GAMBLE_RESULT, "Gamble Result", onTap = null)
+        placeholderDestination(Routes.INTERMISSION, "Intermission", onTap = null)
+        placeholderDestination(Routes.FINALE, "Finale", onTap = null)
+
+        actINavGraph(navController, container)
+        actIINavGraph(navController, container)
+        actIIINavGraph(navController, container)
+    }
+}
+
+private fun NavGraphBuilder.placeholderDestination(
+    route: String,
+    label: String,
+    onTap: (() -> Unit)?
+) {
+    composable(route) {
+        Box(
+            modifier = if (onTap != null) {
+                Modifier.fillMaxSize().clickable(onClick = onTap)
+            } else {
+                Modifier.fillMaxSize()
+            },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(if (onTap != null) "$label (tap to continue)" else label)
         }
     }
 }
+
+private fun NavGraphBuilder.actINavGraph(
+    navController: NavHostController,
+    container: AppContainer
+) {
+    navigation(startDestination = Routes.WORD_DUEL, route = Graphs.ACT_I) {
+        composable(Routes.WORD_DUEL) {
+            val viewModel: WordDuelViewModel = viewModel(
+                viewModelStoreOwner = navController.getBackStackEntry(Graphs.ACT_I),
+                factory = WordDuelViewModel.factory(
+                    engine = container.createWordDuelEngine(),
+                    ai = container.createWordDuelJokerAI(),
+                    dialogue = container.dialogueRepository
+                )
+            )
+            WordDuelScreen(
+                viewModel = viewModel,
+                onActComplete = { playerActScore, _, _, _ ->
+                    navController.navigate(actIIRoute(playerActScore)) {
+                        popUpTo(Graphs.ACT_I) { inclusive = true }
+                    }
+                }
+            )
+        }
+    }
+}
+
+private fun NavGraphBuilder.actIINavGraph(
+    navController: NavHostController,
+    container: AppContainer
+) {
+    val graphRoute = "${Graphs.ACT_II}/{${GambleArgs.STAKES}}"
+    navigation(startDestination = Routes.PATTERN_DISPLAY, route = graphRoute) {
+        composable(Routes.PATTERN_DISPLAY) {
+            val graphEntry = navController.getBackStackEntry(graphRoute)
+            val carriedStakes = stakesArgOf(graphEntry)
+            val viewModel: PatternViewModel = viewModel(
+                viewModelStoreOwner = graphEntry,
+                factory = PatternViewModel.factory(
+                    engine = container.createPatternEngine(),
+                    dialogue = container.dialogueRepository
+                )
+            )
+            PatternInputScreen(
+                viewModel = viewModel,
+                onActComplete = { patternActScore, _, _ ->
+                    val stakes = carriedStakes + patternActScore
+                    navController.navigate(actIIIRoute(stakes)) {
+                        popUpTo(graphRoute) { inclusive = true }
+                    }
+                }
+            )
+        }
+    }
+}
+
+private fun NavGraphBuilder.actIIINavGraph(
+    navController: NavHostController,
+    container: AppContainer
+) {
+    val graphRoute = "${Graphs.ACT_III}/{${GambleArgs.STAKES}}"
+    navigation(startDestination = Routes.GAMBLE, route = graphRoute) {
+        composable(Routes.GAMBLE) {
+            val viewModel = gambleViewModel(navController, container, graphRoute)
+            GambleScreen(
+                viewModel = viewModel,
+                onReveal = { navController.navigate(Routes.GAMBLE_REVEAL) },
+                onActComplete = { _, _, _ -> navController.navigate(Routes.FINALE) }
+            )
+        }
+        composable(Routes.GAMBLE_REVEAL) {
+            val viewModel = gambleViewModel(navController, container, graphRoute)
+            GambleRevealScreen(
+                viewModel = viewModel,
+                onContinue = { navController.popBackStack() },
+                onActComplete = { _, _, _ ->
+                    navController.navigate(Routes.FINALE) {
+                        popUpTo(graphRoute) { inclusive = true }
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun gambleViewModel(
+    navController: NavHostController,
+    container: AppContainer,
+    graphRoute: String
+): GambleViewModel {
+    val graphEntry = navController.getBackStackEntry(graphRoute)
+    return viewModel(
+        viewModelStoreOwner = graphEntry,
+        factory = GambleViewModel.factory(
+            engine = container.createGambleEngine(),
+            dialogue = container.dialogueRepository,
+            baseStakes = stakesArgOf(graphEntry)
+        )
+    )
+}
+
+private fun stakesArgOf(entry: NavBackStackEntry): Int =
+    entry.arguments?.getString(GambleArgs.STAKES)?.toIntOrNull() ?: 0
+
+private fun actIIRoute(stakes: Int) = "${Graphs.ACT_II}/$stakes"
+private fun actIIIRoute(stakes: Int) = "${Graphs.ACT_III}/$stakes"

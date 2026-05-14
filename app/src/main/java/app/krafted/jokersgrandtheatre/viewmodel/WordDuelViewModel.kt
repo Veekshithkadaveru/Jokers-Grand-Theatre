@@ -141,7 +141,7 @@ class WordDuelViewModel(
     }
 
     fun acknowledgeActEnd() {
-        // intentionally a no-op; host handles navigation
+
     }
 
     private fun startRound() {

@@ -1,13 +1,10 @@
 package app.krafted.jokersgrandtheatre.ui.actI
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,11 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,28 +37,44 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.krafted.jokersgrandtheatre.R
 import app.krafted.jokersgrandtheatre.model.WordResult
-import app.krafted.jokersgrandtheatre.ui.components.JokerDialogue
+import app.krafted.jokersgrandtheatre.ui.components.CinzelLabel
+import app.krafted.jokersgrandtheatre.ui.components.DialogueBox
+import app.krafted.jokersgrandtheatre.ui.components.EmberParticles
+import app.krafted.jokersgrandtheatre.ui.components.GoldButton
 import app.krafted.jokersgrandtheatre.ui.components.JokerPortrait
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimson
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreDark
+import app.krafted.jokersgrandtheatre.ui.components.OrnateFrame
+import app.krafted.jokersgrandtheatre.ui.components.StageBackground
+import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
+import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
+import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonDeep
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonHi
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreOnSurface
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreOnSurfaceMuted
-import app.krafted.jokersgrandtheatre.ui.theme.TheatrePurple
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreSurface
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldDeep
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldHi
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreInk
 import app.krafted.jokersgrandtheatre.viewmodel.Phase
 import app.krafted.jokersgrandtheatre.viewmodel.Turn
 import app.krafted.jokersgrandtheatre.viewmodel.WordDuelState
 import app.krafted.jokersgrandtheatre.viewmodel.WordDuelViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+private val ActAccent = TheatreGold
+private val ActDeep = Color(0xFF7A0F12)
+private val ActBackground = Color(0xC5080203)
 
 @Composable
 fun WordDuelScreen(
@@ -73,35 +83,41 @@ fun WordDuelScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TheatreDark)
-            .systemBarsPadding()
-    ) {
+    LaunchedEffect(state.phase) {
+        if (state.phase == Phase.ACT_END) {
+            delay(1800L)
+            onActComplete(
+                state.playerActScore,
+                state.jokerActScore,
+                state.playerRoundsWon,
+                state.jokerRoundsWon
+            )
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        StageBackground(R.drawable.jok019_back_2, tint = ActBackground)
+        EmberParticles(density = 14, opacity = 0.35f)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .systemBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            TopBar(state)
-            Spacer(Modifier.height(12.dp))
-            JokerSection(state)
+            ActTopBar(state)
+            Spacer(Modifier.height(8.dp))
+            JokerStrip(state)
             Spacer(Modifier.height(10.dp))
-            ScoreRow(state)
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = TheatreGold.copy(alpha = 0.25f)
-            )
-            WordDisplay(state)
-            Spacer(Modifier.height(14.dp))
+            WordDisplayRow(state)
+            Spacer(Modifier.height(10.dp))
             LetterGrid(
                 state = state,
                 onLetterTap = viewModel::onLetterTap,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             )
-            Spacer(Modifier.height(14.dp))
-            TurnIndicator(state)
             Spacer(Modifier.height(10.dp))
             ActionRow(
                 state = state,
@@ -111,173 +127,198 @@ fun WordDuelScreen(
         }
 
         if (state.phase == Phase.ROUND_END) {
-            RoundEndOverlay(state, onContinue = viewModel::continueToNextRound)
+            RoundResultOverlay(state, onContinue = viewModel::continueToNextRound)
         }
 
         if (state.phase == Phase.ACT_END) {
-            ActEndOverlay(
-                state = state,
-                onContinue = {
-                    onActComplete(
-                        state.playerActScore,
-                        state.jokerActScore,
-                        state.playerRoundsWon,
-                        state.jokerRoundsWon
-                    )
-                }
-            )
+            ActCompleteOverlay(state)
         }
     }
 }
 
 @Composable
-private fun TopBar(state: WordDuelState) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "ROUND ${state.round} / 3",
-            color = TheatreGold,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "YOU ${state.playerRoundsWon}",
-                color = TheatreGold,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "  ·  ",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "${state.jokerRoundsWon} JOKER",
-                color = TheatreCrimson,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun JokerSection(state: WordDuelState) {
+private fun ActTopBar(state: WordDuelState) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp),
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, ActAccent.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        JokerPortrait(
-            expression = state.jokerExpression,
-            modifier = Modifier.size(96.dp)
+        Text(
+            text = "ACT I",
+            fontFamily = CinzelDecorativeFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 18.sp,
+            color = ActAccent,
+            style = TextStyle(
+                shadow = Shadow(Color.Black, Offset(0f, 1f), 0f)
+            )
         )
-        Spacer(Modifier.width(12.dp))
-        JokerDialogue(
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = "· R${state.round}/3",
+            color = Color(0xA6FFE7A8),
+            fontFamily = CinzelFamily,
+            fontSize = 9.sp,
+            letterSpacing = 2.sp
+        )
+        Spacer(Modifier.weight(1f))
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (i in 0 until 3) {
+                val playerWin = i < state.playerRoundsWon
+                val jokerWin = i >= state.playerRoundsWon && i < state.playerRoundsWon + state.jokerRoundsWon
+                val isCurrent = i == state.playerRoundsWon + state.jokerRoundsWon
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                playerWin -> Color(0xFF7CD34E)
+                                jokerWin -> Color(0xFFC92A1A)
+                                isCurrent -> ActAccent
+                                else -> Color(0x1FFFFFFF)
+                            }
+                        )
+                )
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = state.playerActScore.toString(),
+            fontFamily = CinzelDecorativeFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 16.sp,
+            color = ActAccent,
+            style = TextStyle(shadow = Shadow(ActAccent.copy(alpha = 0.4f), Offset.Zero, 6f))
+        )
+    }
+}
+
+@Composable
+private fun JokerStrip(state: WordDuelState) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, ActAccent.copy(alpha = 0.44f), RoundedCornerShape(8.dp))
+            .padding(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        JokerPortrait(expression = state.jokerExpression, size = 42.dp, accent = ActAccent)
+        Spacer(Modifier.width(8.dp))
+        Text(
             text = state.jokerLine,
-            color = TheatreOnSurface,
+            color = Color(0xD9FFE7A8),
+            fontFamily = PlayfairFamily,
+            fontStyle = FontStyle.Italic,
+            fontSize = 12.sp,
             modifier = Modifier.weight(1f)
         )
     }
 }
 
 @Composable
-private fun ScoreRow(state: WordDuelState) {
+private fun WordDisplayRow(state: WordDuelState) {
+    val pendingLetters = state.playerSelection.map { state.grid[it] }
+    val playerTiles = state.playerWord.toList() + pendingLetters
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        WordStrip(
+            label = "JOKER",
+            accent = Color(0xFFFF5A3A),
+            tiles = state.jokerWord.toList(),
+            thinking = state.isJokerThinking
+        )
+        WordStrip(
+            label = "YOU",
+            accent = ActAccent,
+            tiles = playerTiles,
+            valid = playerTiles.size >= 3 && state.lastWordResult == WordResult.VALID,
+            invalid = playerTiles.size >= 3 && state.lastWordResult != WordResult.VALID && state.lastWordResult != null
+        )
+    }
+}
+
+@Composable
+private fun WordStrip(
+    label: String,
+    accent: Color,
+    tiles: List<Char>,
+    thinking: Boolean = false,
+    valid: Boolean = false,
+    invalid: Boolean = false
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, accent.copy(alpha = 0.66f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "YOU ${state.playerActScore + state.playerRoundScore} pts",
-            color = TheatreGold,
+            text = label,
+            color = accent,
+            fontFamily = CinzelFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
+            fontSize = 9.sp,
+            letterSpacing = 2.sp,
+            modifier = Modifier.width(44.dp)
         )
-        Text(
-            text = "JOKER ${state.jokerActScore + state.jokerRoundScore} pts",
-            color = TheatreGold.copy(alpha = 0.7f),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp
-        )
-    }
-}
-
-@Composable
-private fun WordDisplay(state: WordDuelState) {
-    val pendingLetters = state.playerSelection.joinToString("") { state.grid[it].toString() }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "YOUR WORD",
-            color = TheatreOnSurfaceMuted,
-            fontSize = 11.sp,
-            letterSpacing = 1.5.sp
-        )
-        Spacer(Modifier.height(2.dp))
-        Row(verticalAlignment = Alignment.Bottom) {
-            val committed = state.playerWord.ifEmpty { if (pendingLetters.isEmpty()) "—" else "" }
-            Text(
-                text = committed,
-                color = TheatreOnSurface,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
-            )
-            if (pendingLetters.isNotEmpty()) {
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (tiles.isEmpty()) {
                 Text(
-                    text = pendingLetters,
-                    color = TheatrePurple.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
+                    text = if (thinking) "thinking…" else "—",
+                    color = Color(0x59FFE7A8),
+                    fontFamily = PlayfairFamily,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 11.sp
                 )
+            } else {
+                tiles.forEach { c ->
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp, 22.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color(0xFFFFE78A), Color(0xFFFFB53A), Color(0xFFA86B07))
+                                ),
+                                RoundedCornerShape(4.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = c.toString(),
+                            color = Color(0xFF3A0306),
+                            fontFamily = CinzelDecorativeFamily,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
             }
         }
-        WordErrorMessage(state)
-        Spacer(Modifier.height(8.dp))
         Text(
-            text = "JOKER'S WORD",
-            color = TheatreOnSurfaceMuted,
-            fontSize = 11.sp,
-            letterSpacing = 1.5.sp
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = state.jokerWord.ifEmpty { "—" },
-            color = TheatreCrimson,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp
-        )
-    }
-}
-
-@Composable
-private fun WordErrorMessage(state: WordDuelState) {
-    var visible by remember(state.lastWordResult, state.lastSubmittedWord, state.lastSubmitter) {
-        mutableStateOf(
-            state.lastSubmitter == Turn.PLAYER &&
-                (state.lastWordResult == WordResult.TOO_SHORT || state.lastWordResult == WordResult.NOT_A_WORD)
-        )
-    }
-    LaunchedEffect(state.lastWordResult, state.lastSubmittedWord, state.lastSubmitter) {
-        if (visible) {
-            delay(2000)
-            visible = false
-        }
-    }
-    AnimatedVisibility(visible = visible, enter = fadeIn(), exit = fadeOut()) {
-        val label = when (state.lastWordResult) {
-            WordResult.TOO_SHORT -> "TOO SHORT"
-            WordResult.NOT_A_WORD -> "NOT A WORD"
-            else -> ""
-        }
-        Text(
-            text = label,
-            color = TheatreCrimson,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold
+            text = buildString {
+                if (tiles.isNotEmpty()) append("×${tiles.size}")
+                if (valid) append(" ✓")
+                if (invalid) append(" ✗")
+            },
+            color = when {
+                valid -> Color(0xFF7CD34E)
+                invalid -> Color(0xFFFF5A3A)
+                else -> Color(0x73FFE7A8)
+            },
+            fontFamily = CinzelFamily,
+            fontSize = 10.sp,
+            modifier = Modifier.width(36.dp),
+            textAlign = TextAlign.End
         )
     }
 }
@@ -295,8 +336,8 @@ private fun LetterGrid(
     LaunchedEffect(state.round, state.grid) {
         cellAlphas.forEachIndexed { idx, anim ->
             scope.launch {
-                delay(idx * 30L)
-                anim.animateTo(1f, tween(durationMillis = 300))
+                delay(idx * 25L)
+                anim.animateTo(1f, tween(durationMillis = 280))
             }
         }
     }
@@ -305,40 +346,47 @@ private fun LetterGrid(
     LaunchedEffect(state.jokerLastPick) {
         if (state.jokerLastPick != null) {
             jokerGlow.snapTo(0f)
-            jokerGlow.animateTo(1f, tween(durationMillis = 200))
-            jokerGlow.animateTo(0f, tween(durationMillis = 400))
+            jokerGlow.animateTo(1f, tween(200))
+            jokerGlow.animateTo(0f, tween(400))
         }
     }
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+    Box(
+        modifier = modifier
+            .background(Color(0x73000000), RoundedCornerShape(12.dp))
+            .border(2.dp, ActAccent.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+            .padding(8.dp)
     ) {
-        for (row in 0 until 5) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                for (col in 0 until 5) {
-                    val index = row * 5 + col
-                    if (index < state.grid.size) {
-                        LetterCell(
-                            letter = state.grid[index],
-                            isLocked = index in state.lockedLetters,
-                            isSelected = index in state.playerSelection,
-                            isJokerLastPick = state.jokerLastPick == index,
-                            jokerGlowAlpha = jokerGlow.value,
-                            enabled = state.currentTurn == Turn.PLAYER &&
-                                !state.isJokerThinking &&
-                                state.phase == Phase.PLAYING,
-                            entranceAlpha = cellAlphas.getOrNull(index)?.value ?: 1f,
-                            onTap = { onLetterTap(index) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            for (row in 0 until 5) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    for (col in 0 until 5) {
+                        val idx = row * 5 + col
+                        if (idx < state.grid.size) {
+                            LetterCell(
+                                letter = state.grid[idx],
+                                isLocked = idx in state.lockedLetters,
+                                isSelected = idx in state.playerSelection,
+                                isJokerLastPick = state.jokerLastPick == idx,
+                                jokerGlowAlpha = jokerGlow.value,
+                                enabled = state.currentTurn == Turn.PLAYER &&
+                                    !state.isJokerThinking &&
+                                    state.phase == Phase.PLAYING,
+                                entranceAlpha = cellAlphas.getOrNull(idx)?.value ?: 1f,
+                                onTap = { onLetterTap(idx) },
+                                modifier = Modifier.weight(1f).aspectRatio(1f)
+                            )
+                        } else {
+                            Spacer(Modifier.weight(1f))
+                        }
                     }
                 }
             }
@@ -358,272 +406,238 @@ private fun LetterCell(
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val targetScale = when {
-        isSelected -> 1.15f
-        isLocked -> 0.9f
-        else -> 1.0f
-    }
     val scale by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "LetterCellScale"
+        targetValue = when {
+            isSelected -> 1.15f
+            isLocked -> 0.96f
+            else -> 1.0f
+        },
+        animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium),
+        label = "LetterScale"
     )
 
-    val background = when {
-        isSelected -> TheatrePurple
-        isLocked -> TheatreSurface
-        else -> TheatreSurface
-    }
-    val textColor = when {
-        isSelected -> TheatreGold
-        isLocked -> TheatreOnSurfaceMuted
-        else -> TheatreGold
-    }
+    val cellBg = if (isLocked)
+        Brush.verticalGradient(listOf(Color(0xB30F0505), Color(0xB30F0505)))
+    else
+        Brush.verticalGradient(listOf(TheatreGoldHi, TheatreGold, TheatreGoldDeep))
 
     Box(
         modifier = modifier
             .alpha(entranceAlpha)
             .scale(scale)
-            .clip(RoundedCornerShape(10.dp))
-            .background(background)
+            .clip(RoundedCornerShape(8.dp))
+            .background(cellBg)
+            .border(
+                width = if (isLocked) 1.dp else 2.dp,
+                color = if (isLocked) Color(0xFF3A0306) else TheatreGoldDeep,
+                shape = RoundedCornerShape(8.dp)
+            )
             .then(
-                if (isJokerLastPick && isLocked && jokerGlowAlpha > 0f) {
-                    Modifier.border(
-                        width = 2.dp,
-                        color = TheatreCrimson.copy(alpha = jokerGlowAlpha),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                } else Modifier
+                if (isJokerLastPick && jokerGlowAlpha > 0f)
+                    Modifier.border(2.dp, Color(0xFFFF5A3A).copy(alpha = jokerGlowAlpha), RoundedCornerShape(8.dp))
+                else Modifier
             )
             .clickable(enabled = enabled && !isLocked, onClick = onTap),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = letter.toString(),
-            color = textColor,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp
+            color = if (isLocked) Color(0x40FFE7A8) else Color(0xFF3A0306),
+            fontFamily = CinzelDecorativeFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 22.sp,
+            style = TextStyle(
+                shadow = if (!isLocked) Shadow(Color.White.copy(alpha = 0.5f), Offset(0f, 2f), 0f) else null
+            )
         )
     }
 }
 
 @Composable
-private fun TurnIndicator(state: WordDuelState) {
-    val (label, color, italic) = when {
-        state.isJokerThinking -> Triple("JOKER IS THINKING…", TheatreCrimson, true)
-        state.currentTurn == Turn.PLAYER -> Triple("YOUR TURN", TheatreGold, false)
-        else -> Triple("JOKER'S TURN", TheatreCrimson, false)
-    }
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Text(
-            text = label,
-            color = color,
-            fontWeight = FontWeight.Bold,
-            fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
-            fontSize = 14.sp,
-            letterSpacing = 2.sp
-        )
-    }
-}
-
-@Composable
-private fun ActionRow(
-    state: WordDuelState,
-    onUndo: () -> Unit,
-    onPass: () -> Unit
-) {
+private fun ActionRow(state: WordDuelState, onUndo: () -> Unit, onPass: () -> Unit) {
     val canAct = state.currentTurn == Turn.PLAYER && state.phase == Phase.PLAYING
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Button(
-            onClick = onUndo,
-            enabled = canAct && state.playerSelection.isNotEmpty(),
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TheatreSurface,
-                contentColor = TheatreOnSurface,
-                disabledContainerColor = TheatreSurface.copy(alpha = 0.5f),
-                disabledContentColor = TheatreOnSurfaceMuted
-            )
+
+        val undoEnabled = canAct && state.playerSelection.isNotEmpty()
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(44.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0x8C000000))
+                .border(2.dp, ActAccent.copy(alpha = if (undoEnabled) 0.55f else 0.22f), RoundedCornerShape(8.dp))
+                .clickable(enabled = undoEnabled, onClick = onUndo),
+            contentAlignment = Alignment.Center
         ) {
-            Text("UNDO", fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+            Text(
+                text = "← UNDO",
+                color = ActAccent.copy(alpha = if (undoEnabled) 1f else 0.4f),
+                fontFamily = CinzelFamily,
+                fontSize = 12.sp,
+                letterSpacing = 1.5.sp
+            )
         }
-        Button(
-            onClick = onPass,
-            enabled = canAct,
-            modifier = Modifier.weight(2f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TheatrePurple,
-                contentColor = TheatreGold,
-                disabledContainerColor = TheatrePurple.copy(alpha = 0.4f),
-                disabledContentColor = TheatreOnSurfaceMuted
-            )
+
+        Box(
+            modifier = Modifier
+                .weight(1.4f)
+                .height(44.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFFC92A1A), Color(0xFF7A0F12)))
+                )
+                .border(2.dp, ActAccent, RoundedCornerShape(8.dp))
+                .clickable(enabled = canAct, onClick = onPass),
+            contentAlignment = Alignment.Center
         ) {
-            Text("PASS / SUBMIT", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text(
+                text = if (!canAct) "PASSED" else "SUBMIT WORD",
+                color = Color.White.copy(alpha = if (canAct) 1f else 0.5f),
+                fontFamily = CinzelFamily,
+                fontSize = 13.sp,
+                letterSpacing = 1.5.sp
+            )
         }
     }
 }
 
 @Composable
-private fun RoundEndOverlay(state: WordDuelState, onContinue: () -> Unit) {
-    val headline = when {
-        state.playerRoundScore > state.jokerRoundScore -> "YOU WIN THE ROUND"
-        state.jokerRoundScore > state.playerRoundScore -> "JOKER WINS THE ROUND"
-        else -> "A DRAW"
+private fun RoundResultOverlay(state: WordDuelState, onContinue: () -> Unit) {
+    val playerWon = state.playerRoundScore > state.jokerRoundScore
+    val tie = state.playerRoundScore == state.jokerRoundScore
+    val title = when {
+        tie -> "A Stalemate"
+        playerWon -> "You Win the Round"
+        else -> "The Joker Wins"
     }
-    val headlineColor = if (state.playerRoundScore > state.jokerRoundScore) TheatreGold else TheatreCrimson
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.Black.copy(alpha = 0.85f)
+    val tone = when {
+        tie -> Color(0xFFCBB37C)
+        playerWon -> Color(0xFF7CD34E)
+        else -> Color(0xFFFF5A3A)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.6f)),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "ROUND ${state.round}",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp,
-                letterSpacing = 3.sp
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = headline,
-                color = headlineColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "You ${state.playerRoundScore}  —  ${state.jokerRoundScore} Joker",
-                color = TheatreOnSurface,
-                fontSize = 18.sp
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "Total  You ${state.playerActScore}  —  ${state.jokerActScore} Joker",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp
-            )
-            Spacer(Modifier.height(24.dp))
-            JokerPortrait(
-                expression = state.jokerExpression,
-                modifier = Modifier.size(72.dp)
-            )
-            Spacer(Modifier.height(12.dp))
-            JokerDialogue(
-                text = state.jokerLine,
-                color = TheatreOnSurface,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(28.dp))
-            Button(
-                onClick = onContinue,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TheatrePurple,
-                    contentColor = TheatreGold
+                .fillMaxWidth(0.92f)
+                .padding(bottom = 36.dp)
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFF2A0306), Color(0xFF4A0008))),
+                    RoundedCornerShape(14.dp)
                 )
-            ) {
-                Text("NEXT ROUND", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                .border(2.dp, tone, RoundedCornerShape(14.dp))
+                .padding(16.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CinzelLabel(
+                    text = "· ROUND ${state.round} RESULT ·",
+                    color = Color(0x8CFFE7A8),
+                    fontSize = 9.sp,
+                    letterSpacing = 3.sp
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = title,
+                    fontFamily = CinzelDecorativeFamily,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 22.sp,
+                    color = tone,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(shadow = Shadow(Color.Black, Offset.Zero, 14f))
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = when {
+                        tie -> "Honour preserved."
+                        playerWon -> "A point to the challenger."
+                        else -> "A point to the master."
+                    },
+                    fontFamily = PlayfairFamily,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 12.sp,
+                    color = Color(0xBFFFE7A8),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(12.dp))
+                DialogueBox(
+                    expression = state.jokerExpression,
+                    accent = ActAccent,
+                    text = state.jokerLine,
+                    portraitSize = 56.dp
+                )
+                Spacer(Modifier.height(12.dp))
+                GoldButton(onClick = onContinue) {
+                    Text(
+                        text = "CONTINUE",
+                        fontFamily = CinzelFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        letterSpacing = 2.5.sp,
+                        color = TheatreCrimsonDeep
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ActEndOverlay(state: WordDuelState, onContinue: () -> Unit) {
-    val playerWonAct = when {
-        state.playerRoundsWon > state.jokerRoundsWon -> true
-        state.jokerRoundsWon > state.playerRoundsWon -> false
-        else -> state.playerActScore > state.jokerActScore
-    }
-    val headline = when {
-        state.playerRoundsWon == state.jokerRoundsWon && state.playerActScore == state.jokerActScore -> "A DRAW"
-        playerWonAct -> "YOU WIN THE ACT"
-        else -> "JOKER WINS THE ACT"
-    }
-    val headlineColor = if (playerWonAct) TheatreGold else TheatreCrimson
+private fun ActCompleteOverlay(state: WordDuelState) {
+    val playerWonAct = state.playerRoundsWon > state.jokerRoundsWon
+    val tone = if (playerWonAct) Color(0xFF7CD34E) else Color(0xFFFF5A3A)
 
-    var fired by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(1500)
-        if (!fired) {
-            fired = true
-            onContinue()
-        }
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.Black.copy(alpha = 0.92f)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.88f)),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "ACT I COMPLETE",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp,
-                letterSpacing = 3.sp
+            CinzelLabel(
+                text = "· ACT I · CURTAIN ·",
+                color = Color(0x8CFFE7A8),
+                fontSize = 10.sp,
+                letterSpacing = 4.sp
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = headline,
-                color = headlineColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
+                text = if (playerWonAct) "Act Claimed" else "Act Lost",
+                fontFamily = CinzelDecorativeFamily,
+                fontWeight = FontWeight.Black,
+                fontSize = 32.sp,
+                color = tone,
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "Rounds  You ${state.playerRoundsWon}  —  ${state.jokerRoundsWon} Joker",
-                color = TheatreOnSurface,
-                fontSize = 16.sp
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Score  You ${state.playerActScore}  —  ${state.jokerActScore} Joker",
-                color = TheatreOnSurface,
-                fontSize = 16.sp
-            )
-            Spacer(Modifier.height(24.dp))
-            JokerPortrait(
-                expression = state.jokerExpression,
-                modifier = Modifier.size(96.dp)
-            )
-            Spacer(Modifier.height(12.dp))
-            JokerDialogue(
-                text = state.jokerLine,
-                color = TheatreOnSurface,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(28.dp))
-            Button(
-                onClick = {
-                    if (!fired) {
-                        fired = true
-                        onContinue()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TheatrePurple,
-                    contentColor = TheatreGold
-                )
-            ) {
-                Text("CONTINUE", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Spacer(Modifier.height(16.dp))
+            OrnateFrame(padding = 16.dp) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CinzelLabel(
+                        text = "YOUR SCORE FOR ACT I",
+                        color = Color(0x8CFFE7A8),
+                        fontSize = 10.sp,
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = state.playerActScore.toString(),
+                        fontFamily = CinzelDecorativeFamily,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 56.sp,
+                        color = ActAccent,
+                        style = TextStyle(shadow = Shadow(Color.Black, Offset.Zero, 18f))
+                    )
+                }
             }
         }
     }

@@ -1,11 +1,10 @@
 package app.krafted.jokersgrandtheatre.ui.actII
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,25 +29,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.krafted.jokersgrandtheatre.R
-import app.krafted.jokersgrandtheatre.ui.components.JokerDialogue
+import app.krafted.jokersgrandtheatre.ui.components.CinzelLabel
+import app.krafted.jokersgrandtheatre.ui.components.EmberParticles
 import app.krafted.jokersgrandtheatre.ui.components.JokerPortrait
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimson
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreDark
+import app.krafted.jokersgrandtheatre.ui.components.StageBackground
+import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
+import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
+import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreMidnightBlue
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreOnSurface
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreOnSurfaceMuted
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldDeep
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldHi
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreSilver
 import app.krafted.jokersgrandtheatre.viewmodel.PatternState
 import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
+
+private val ActAccent = Color(0xFF9BE37A)
+private val ActBg = Color(0xC5020C08)
 
 @Composable
 fun PatternDisplayScreen(
@@ -58,26 +67,20 @@ fun PatternDisplayScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TheatreDark)
-            .systemBarsPadding()
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        StageBackground(R.drawable.jok019_back_3, tint = ActBg)
+        EmberParticles(density = 10, opacity = 0.3f)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .systemBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
             PatternTopBar(state)
-            Spacer(Modifier.height(12.dp))
-            PatternJokerSection(state)
+            Spacer(Modifier.height(8.dp))
+            PatternJokerStrip(state)
             Spacer(Modifier.height(10.dp))
-            PatternScoreRow(state)
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = TheatreSilver.copy(alpha = 0.25f)
-            )
             ProgressStrip(state)
             Spacer(Modifier.height(16.dp))
             Box(
@@ -96,68 +99,45 @@ fun PatternDisplayScreen(
 internal fun ActiveSymbolDisplay(activeSymbolIndex: Int) {
     val isActive = activeSymbolIndex in 0..6
     val scale = remember { Animatable(0.8f) }
-    val glow = remember { Animatable(0f) }
 
     LaunchedEffect(activeSymbolIndex) {
         if (isActive) {
-            scale.snapTo(0.8f)
-            glow.snapTo(0f)
-            scale.animateTo(
-                targetValue = 1.2f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
-            scale.animateTo(
-                targetValue = 1.0f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
-            glow.animateTo(1f, tween(durationMillis = 200))
-            glow.animateTo(0f, tween(durationMillis = 400))
+            scale.snapTo(0.3f)
+            scale.animateTo(1.2f, tween(150))
+            scale.animateTo(1.0f, tween(120))
         } else {
             scale.snapTo(0.8f)
-            glow.snapTo(0f)
         }
     }
 
-    Box(
-        modifier = Modifier.size(220.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.size(200.dp), contentAlignment = Alignment.Center) {
         if (isActive) {
+
             Box(
                 modifier = Modifier
-                    .size(220.dp)
-                    .alpha(glow.value * 0.6f)
+                    .fillMaxSize()
                     .clip(CircleShape)
-                    .background(TheatreGold.copy(alpha = 0.5f))
+                    .background(
+                        Brush.radialGradient(
+                            listOf(Color.White.copy(alpha = 0.2f), Color.Transparent)
+                        )
+                    )
             )
-            Box(
+            Image(
+                painter = painterResource(id = symbolDrawable(activeSymbolIndex)),
+                contentDescription = "Symbol ${activeSymbolIndex + 1}",
                 modifier = Modifier
-                    .size(180.dp)
-                    .scale(scale.value)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(TheatreMidnightBlue),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = symbolDrawable(activeSymbolIndex)),
-                    contentDescription = "Symbol ${activeSymbolIndex + 1}",
-                    modifier = Modifier
-                        .size(140.dp)
-                        .padding(8.dp)
-                )
-            }
+                    .size(170.dp)
+                    .scale(scale.value),
+                contentScale = ContentScale.Fit
+            )
         } else {
             Box(
                 modifier = Modifier
-                    .size(180.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(TheatreMidnightBlue.copy(alpha = 0.4f))
+                    .size(170.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .border(2.dp, ActAccent.copy(alpha = 0.27f), RoundedCornerShape(20.dp))
+                    .background(Color(0x1AFFFFFF))
             )
         }
     }
@@ -167,34 +147,38 @@ internal fun ActiveSymbolDisplay(activeSymbolIndex: Int) {
 internal fun ProgressStrip(state: PatternState) {
     val total = state.sequence.size.coerceAtLeast(1)
     var stepCounter by remember(state.round) { mutableIntStateOf(0) }
-    LaunchedEffect(state.round) { stepCounter = 0 }
     LaunchedEffect(state.activeSymbolIndex, state.round) {
         if (state.activeSymbolIndex in 0..6 && stepCounter < total) {
-            stepCounter += 1
+            stepCounter = (stepCounter + 1).coerceAtMost(total)
         }
     }
-    val currentStep = stepCounter.coerceIn(0, total)
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "STEP $currentStep OF $total",
-            color = TheatreSilver,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            letterSpacing = 2.sp
-        )
-        Spacer(Modifier.height(6.dp))
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, ActAccent.copy(alpha = 0.33f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CinzelLabel("WATCHING", color = ActAccent, fontSize = 10.sp, letterSpacing = 2.sp)
+            CinzelLabel("$stepCounter / $total", color = Color(0xA6FFE7A8), fontSize = 10.sp)
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             for (i in 0 until total) {
-                val active = i < currentStep
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp))
-                        .background(if (active) TheatreGold else TheatreSilver.copy(alpha = 0.25f))
+                        .background(if (i < stepCounter) ActAccent else Color(0x1FFFFFFF))
                 )
             }
         }
@@ -204,76 +188,78 @@ internal fun ProgressStrip(state: PatternState) {
 @Composable
 internal fun PatternTopBar(state: PatternState) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, ActAccent.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "ROUND ${state.round} / 3",
-            color = TheatreGold,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
+            text = "ACT II",
+            fontFamily = CinzelDecorativeFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 18.sp,
+            color = ActAccent,
+            style = TextStyle(shadow = Shadow(Color.Black, Offset(0f, 1f), 0f))
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "YOU ${state.playerRoundsWon}",
-                color = TheatreGold,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "  ·  ",
-                color = TheatreOnSurfaceMuted,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "${state.jokerRoundsWon} JOKER",
-                color = TheatreCrimson,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = "· R${state.round}/3",
+            color = Color(0xA6FFE7A8),
+            fontFamily = CinzelFamily,
+            fontSize = 9.sp,
+            letterSpacing = 2.sp
+        )
+        Spacer(Modifier.weight(1f))
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (i in 0 until 3) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                i < state.playerRoundsWon -> Color(0xFF7CD34E)
+                                i >= state.playerRoundsWon && i < state.playerRoundsWon + state.jokerRoundsWon -> Color(0xFFC92A1A)
+                                i == state.playerRoundsWon + state.jokerRoundsWon -> ActAccent
+                                else -> Color(0x1FFFFFFF)
+                            }
+                        )
+                )
+            }
         }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = state.actScore.toString(),
+            fontFamily = CinzelDecorativeFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 16.sp,
+            color = ActAccent,
+            style = TextStyle(shadow = Shadow(ActAccent.copy(alpha = 0.4f), Offset.Zero, 6f))
+        )
     }
 }
 
 @Composable
-internal fun PatternJokerSection(state: PatternState) {
+internal fun PatternJokerStrip(state: PatternState) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp),
+            .background(Color(0x8C000000), RoundedCornerShape(8.dp))
+            .border(1.dp, ActAccent.copy(alpha = 0.44f), RoundedCornerShape(8.dp))
+            .padding(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        JokerPortrait(
-            expression = state.jokerExpression,
-            modifier = Modifier.size(96.dp)
-        )
-        Spacer(Modifier.width(12.dp))
-        JokerDialogue(
+        JokerPortrait(expression = state.jokerExpression, size = 42.dp, accent = ActAccent)
+        Spacer(Modifier.width(8.dp))
+        Text(
             text = state.jokerLine,
-            color = TheatreOnSurface,
+            color = Color(0xD9FFE7A8),
+            fontFamily = PlayfairFamily,
+            fontStyle = FontStyle.Italic,
+            fontSize = 12.sp,
             modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-internal fun PatternScoreRow(state: PatternState) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = "YOU ${state.actScore + state.roundScore} pts",
-            color = TheatreGold,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
-        Text(
-            text = "MISTAKES ${state.mistakesMade}",
-            color = TheatreSilver.copy(alpha = 0.85f),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp
         )
     }
 }
