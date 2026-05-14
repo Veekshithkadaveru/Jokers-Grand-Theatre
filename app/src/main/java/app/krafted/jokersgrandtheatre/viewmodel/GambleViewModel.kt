@@ -87,7 +87,7 @@ class GambleViewModel(
                 playerWins = newPlayerWins,
                 jokerWins = newJokerWins,
                 phase = GamblePhase.ROUND_END,
-                jokerExpression = if (crownFound) JokerExpression.IMPRESSED else JokerExpression.GLEEFUL,
+                jokerExpression = if (crownFound) JokerExpression.UNHINGED else JokerExpression.AMUSED,
                 jokerLine = dialogue.line("actIII", if (crownFound) "crownFound" else "crownMissed")
             )
         }

@@ -57,7 +57,7 @@ import app.krafted.jokersgrandtheatre.ui.theme.TheatreSilver
 import app.krafted.jokersgrandtheatre.viewmodel.PatternState
 import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
 
-private val ActAccent = Color(0xFF9BE37A)
+private val ActAccent = Color(0xFFC0C0C0)
 private val ActBg = Color(0xC5020C08)
 
 @Composable

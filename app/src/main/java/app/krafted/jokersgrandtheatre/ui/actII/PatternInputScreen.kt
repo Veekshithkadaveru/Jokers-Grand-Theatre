@@ -71,7 +71,7 @@ private const val SYMBOL_COUNT = 7
 private const val GRID_COLS = 4
 private const val GRID_ROWS = 2
 
-private val ActAccent = Color(0xFF9BE37A)
+private val ActAccent = Color(0xFFC0C0C0)
 private val ActBg = Color(0xC5020C08)
 
 @Composable

@@ -97,7 +97,7 @@ fun TheatreLobbyScreen(
             mechanic = "Pattern Mirror",
             moodName = "Sinister",
             desc = "Watch a sequence, then tap it back in reverse.",
-            accent = Color(0xFF9BE37A),
+            accent = Color(0xFFC0C0C0),
             bestScore = bestActIIScore
         ),
         ActEntry(

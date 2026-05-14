@@ -52,7 +52,7 @@ private fun intermissionVisuals(intermission: Act): IntermissionVisuals = when (
         intKey = "intermissionII",
         fromMood = "Sinister",
         toMood = "Unhinged",
-        fromAccent = Color(0xFF9BE37A),
+        fromAccent = Color(0xFFC0C0C0),
         target = actVisuals(Act.ACT_III),
         buttonLabel = "CONTINUE · ACT III"
     )

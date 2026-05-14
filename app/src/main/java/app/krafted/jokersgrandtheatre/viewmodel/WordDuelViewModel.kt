@@ -230,7 +230,7 @@ class WordDuelViewModel(
         val actDone = newPlayerRoundsWon >= 2 || newJokerRoundsWon >= 2 || s.round >= 3
 
         val roundWinnerIsPlayer = playerWon
-        val roundExpression = if (roundWinnerIsPlayer) JokerExpression.IMPRESSED else JokerExpression.TRIUMPHANT
+        val roundExpression = if (roundWinnerIsPlayer) JokerExpression.IMPRESSED else JokerExpression.AMUSED
         val roundLine = dialogue.line("actI", if (roundWinnerIsPlayer) "playerWinsRound" else "jokerWinsRound")
 
         _state.update {

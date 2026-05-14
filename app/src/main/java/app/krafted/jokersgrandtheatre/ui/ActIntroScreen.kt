@@ -57,7 +57,7 @@ internal fun actVisuals(act: Act): ActVisuals = when (act) {
     Act.ACT_II -> ActVisuals(
         actKey = "actII",
         backgroundRes = R.drawable.jok019_back_3,
-        accent = Color(0xFF9BE37A),
+        accent = Color(0xFFC0C0C0),
         expression = JokerExpression.SINISTER,
         moodName = "Sinister",
         tagline = "The Mirror of Memory",

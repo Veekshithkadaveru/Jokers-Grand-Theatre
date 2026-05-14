@@ -78,7 +78,7 @@ class PatternViewModel(
                         actScore = newActScore,
                         playerRoundsWon = newPlayerRoundsWon,
                         phase = PatternPhase.ROUND_END,
-                        jokerExpression = JokerExpression.IMPRESSED,
+                        jokerExpression = JokerExpression.NEUTRAL,
                         jokerLine = dialogue.line("actII", "playerWinsRound"),
                         lastTapResult = TapResult.SEQUENCE_COMPLETE
                     )
@@ -172,7 +172,7 @@ class PatternViewModel(
         _state.update {
             it.copy(
                 phase = PatternPhase.ACT_END,
-                jokerExpression = if (actPlayerWins) JokerExpression.IMPRESSED else JokerExpression.TRIUMPHANT,
+                jokerExpression = if (actPlayerWins) JokerExpression.NEUTRAL else JokerExpression.TRIUMPHANT,
                 jokerLine = dialogue.line("actII", if (actPlayerWins) "playerWinsAct" else "jokerWinsAct")
             )
         }

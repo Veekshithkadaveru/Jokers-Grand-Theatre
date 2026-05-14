@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,11 +22,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import app.krafted.jokersgrandtheatre.data.db.ActScoreEntity
 import app.krafted.jokersgrandtheatre.di.AppContainer
 import app.krafted.jokersgrandtheatre.model.Act
 import app.krafted.jokersgrandtheatre.ui.ActIntroScreen
 import app.krafted.jokersgrandtheatre.ui.GrandFinaleScreen
 import app.krafted.jokersgrandtheatre.ui.IntermissionScreen
+import app.krafted.jokersgrandtheatre.ui.LeaderboardScreen
 import app.krafted.jokersgrandtheatre.ui.TheatreLobbyScreen
 import app.krafted.jokersgrandtheatre.ui.actI.WordDuelScreen
 import app.krafted.jokersgrandtheatre.ui.actII.PatternInputScreen
@@ -35,6 +38,8 @@ import app.krafted.jokersgrandtheatre.ui.theme.JokersGrandTheatreTheme
 import app.krafted.jokersgrandtheatre.viewmodel.GambleViewModel
 import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
 import app.krafted.jokersgrandtheatre.viewmodel.WordDuelViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object Routes {
     const val SPLASH = "splash"
@@ -97,10 +102,14 @@ fun TheatreNavHost(container: AppContainer) {
         }
 
         composable(Routes.LOBBY) {
+            val scores = produceState(initialValue = emptyList<ActScoreEntity>()) {
+                value = withContext(Dispatchers.IO) { container.theatreDao.getAllBestScores() }
+            }
+            val scoreMap = scores.value.associateBy { it.actName }
             TheatreLobbyScreen(
-                bestActIScore = 0,
-                bestActIIScore = 0,
-                bestActIIIScore = 0,
+                bestActIScore = scoreMap["actI"]?.bestScore ?: 0,
+                bestActIIScore = scoreMap["actII"]?.bestScore ?: 0,
+                bestActIIIScore = scoreMap["actIII"]?.bestScore ?: 0,
                 onPlayAct = { act ->
                     navController.navigate(Routes.actIntro(actIdOf(act), 0))
                 },
@@ -126,20 +135,34 @@ fun TheatreNavHost(container: AppContainer) {
         }
 
         composable(Routes.INTERMISSION) { entry ->
-            val intermission = intermissionFromId(entry.arguments?.getString(NavArgs.INTERMISSION_ID))
+            val intermission =
+                intermissionFromId(entry.arguments?.getString(NavArgs.INTERMISSION_ID))
             val stakes = stakesArgOf(entry)
             IntermissionScreen(
                 intermission = intermission,
                 dialogue = container.dialogueRepository,
                 onContinue = {
-                    navController.navigate(actGraphRoute(actAfterIntermission(intermission), stakes)) {
+                    navController.navigate(
+                        actGraphRoute(
+                            actAfterIntermission(intermission),
+                            stakes
+                        )
+                    ) {
                         popUpTo(Routes.INTERMISSION) { inclusive = true }
                     }
                 }
             )
         }
 
-        placeholderDestination(Routes.LEADERBOARD, "Leaderboard", onTap = { navController.popBackStack() })
+        composable(Routes.LEADERBOARD) {
+            val scores = produceState(initialValue = emptyList<ActScoreEntity>()) {
+                value = withContext(Dispatchers.IO) { container.theatreDao.getAllBestScores() }
+            }
+            LeaderboardScreen(
+                bestScores = scores.value,
+                onBack = { navController.popBackStack() }
+            )
+        }
         placeholderDestination(Routes.WORD_DUEL_RESULT, "Word Duel Result", onTap = null)
         placeholderDestination(Routes.PATTERN_RESULT, "Pattern Result", onTap = null)
         placeholderDestination(Routes.GAMBLE_RESULT, "Gamble Result", onTap = null)
@@ -172,7 +195,9 @@ private fun NavGraphBuilder.placeholderDestination(
     composable(route) {
         Box(
             modifier = if (onTap != null) {
-                Modifier.fillMaxSize().clickable(onClick = onTap)
+                Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onTap)
             } else {
                 Modifier.fillMaxSize()
             },
