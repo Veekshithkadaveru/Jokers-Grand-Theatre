@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -183,10 +184,12 @@ fun OrnateFrame(
             Alignment.TopStart, Alignment.TopEnd,
             Alignment.BottomStart, Alignment.BottomEnd
         ).forEach { alignment ->
+            val dx = if (alignment == Alignment.TopStart || alignment == Alignment.BottomStart) (-5).dp else 5.dp
+            val dy = if (alignment == Alignment.TopStart || alignment == Alignment.TopEnd) (-5).dp else 5.dp
             Box(
                 modifier = Modifier
                     .align(alignment)
-                    .padding((-5).dp)
+                    .offset(dx, dy)
                     .width(10.dp)
                     .height(10.dp)
                     .clip(CircleShape)

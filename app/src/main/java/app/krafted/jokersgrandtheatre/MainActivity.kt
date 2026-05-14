@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,6 +22,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import app.krafted.jokersgrandtheatre.di.AppContainer
+import app.krafted.jokersgrandtheatre.model.Act
+import app.krafted.jokersgrandtheatre.ui.ActIntroScreen
+import app.krafted.jokersgrandtheatre.ui.IntermissionScreen
+import app.krafted.jokersgrandtheatre.ui.TheatreLobbyScreen
 import app.krafted.jokersgrandtheatre.ui.actI.WordDuelScreen
 import app.krafted.jokersgrandtheatre.ui.actII.PatternInputScreen
 import app.krafted.jokersgrandtheatre.ui.actIII.GambleRevealScreen
@@ -34,7 +39,7 @@ object Routes {
     const val SPLASH = "splash"
     const val LOBBY = "lobby"
     const val LEADERBOARD = "leaderboard"
-    const val ACT_INTRO = "actIntro/{actId}"
+    const val ACT_INTRO = "actIntro/{actId}/{stakes}"
     const val WORD_DUEL = "wordDuel"
     const val WORD_DUEL_RESULT = "wordDuelResult"
     const val PATTERN_DISPLAY = "patternDisplay"
@@ -43,11 +48,11 @@ object Routes {
     const val GAMBLE = "gamble"
     const val GAMBLE_REVEAL = "gambleReveal"
     const val GAMBLE_RESULT = "gambleResult"
-    const val INTERMISSION = "intermission/{intermissionId}"
+    const val INTERMISSION = "intermission/{intermissionId}/{stakes}"
     const val FINALE = "finale"
 
-    fun actIntro(actId: String) = "actIntro/$actId"
-    fun intermission(intermissionId: String) = "intermission/$intermissionId"
+    fun actIntro(actId: String, stakes: Int) = "actIntro/$actId/$stakes"
+    fun intermission(intermissionId: String, stakes: Int) = "intermission/$intermissionId/$stakes"
 }
 
 private object Graphs {
@@ -56,8 +61,10 @@ private object Graphs {
     const val ACT_III = "graph_actIII"
 }
 
-private object GambleArgs {
+private object NavArgs {
     const val STAKES = "stakes"
+    const val ACT_ID = "actId"
+    const val INTERMISSION_ID = "intermissionId"
 }
 
 class MainActivity : ComponentActivity() {
@@ -80,18 +87,63 @@ fun TheatreNavHost(container: AppContainer) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.SPLASH) {
         placeholderDestination(Routes.SPLASH, "Splash") {
-            navController.navigate(Graphs.ACT_I)
+            navController.navigate(Routes.LOBBY) {
+                popUpTo(Routes.SPLASH) { inclusive = true }
+            }
         }
-        placeholderDestination(Routes.LOBBY, "Lobby") {
-            navController.navigate(Graphs.ACT_I)
+
+        composable(Routes.LOBBY) {
+            TheatreLobbyScreen(
+                bestActIScore = 0,
+                bestActIIScore = 0,
+                bestActIIIScore = 0,
+                onPlayAct = { act ->
+                    navController.navigate(Routes.actIntro(actIdOf(act), 0))
+                },
+                onPlayAll = {
+                    navController.navigate(Routes.actIntro("I", 0))
+                },
+                onLeaderboard = { navController.navigate(Routes.LEADERBOARD) }
+            )
         }
-        placeholderDestination(Routes.LEADERBOARD, "Leaderboard", onTap = null)
-        placeholderDestination(Routes.ACT_INTRO, "Act Intro", onTap = null)
+
+        composable(Routes.ACT_INTRO) { entry ->
+            val act = actFromId(entry.arguments?.getString(NavArgs.ACT_ID))
+            val stakes = stakesArgOf(entry)
+            ActIntroScreen(
+                act = act,
+                dialogue = container.dialogueRepository,
+                onBegin = {
+                    navController.navigate(actGraphRoute(act, stakes)) {
+                        popUpTo(Routes.ACT_INTRO) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Routes.INTERMISSION) { entry ->
+            val intermission = intermissionFromId(entry.arguments?.getString(NavArgs.INTERMISSION_ID))
+            val stakes = stakesArgOf(entry)
+            IntermissionScreen(
+                intermission = intermission,
+                dialogue = container.dialogueRepository,
+                onContinue = {
+                    navController.navigate(actGraphRoute(actAfterIntermission(intermission), stakes)) {
+                        popUpTo(Routes.INTERMISSION) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        placeholderDestination(Routes.LEADERBOARD, "Leaderboard", onTap = { navController.popBackStack() })
         placeholderDestination(Routes.WORD_DUEL_RESULT, "Word Duel Result", onTap = null)
         placeholderDestination(Routes.PATTERN_RESULT, "Pattern Result", onTap = null)
         placeholderDestination(Routes.GAMBLE_RESULT, "Gamble Result", onTap = null)
-        placeholderDestination(Routes.INTERMISSION, "Intermission", onTap = null)
-        placeholderDestination(Routes.FINALE, "Finale", onTap = null)
+        placeholderDestination(Routes.FINALE, "Finale") {
+            navController.navigate(Routes.LOBBY) {
+                popUpTo(Routes.LOBBY) { inclusive = true }
+            }
+        }
 
         actINavGraph(navController, container)
         actIINavGraph(navController, container)
@@ -123,9 +175,12 @@ private fun NavGraphBuilder.actINavGraph(
     container: AppContainer
 ) {
     navigation(startDestination = Routes.WORD_DUEL, route = Graphs.ACT_I) {
-        composable(Routes.WORD_DUEL) {
+        composable(Routes.WORD_DUEL) { backStackEntry ->
+            val graphEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Graphs.ACT_I)
+            }
             val viewModel: WordDuelViewModel = viewModel(
-                viewModelStoreOwner = navController.getBackStackEntry(Graphs.ACT_I),
+                viewModelStoreOwner = graphEntry,
                 factory = WordDuelViewModel.factory(
                     engine = container.createWordDuelEngine(),
                     ai = container.createWordDuelJokerAI(),
@@ -135,7 +190,7 @@ private fun NavGraphBuilder.actINavGraph(
             WordDuelScreen(
                 viewModel = viewModel,
                 onActComplete = { playerActScore, _, _, _ ->
-                    navController.navigate(actIIRoute(playerActScore)) {
+                    navController.navigate(Routes.intermission("I", playerActScore)) {
                         popUpTo(Graphs.ACT_I) { inclusive = true }
                     }
                 }
@@ -148,10 +203,12 @@ private fun NavGraphBuilder.actIINavGraph(
     navController: NavHostController,
     container: AppContainer
 ) {
-    val graphRoute = "${Graphs.ACT_II}/{${GambleArgs.STAKES}}"
+    val graphRoute = "${Graphs.ACT_II}/{${NavArgs.STAKES}}"
     navigation(startDestination = Routes.PATTERN_DISPLAY, route = graphRoute) {
-        composable(Routes.PATTERN_DISPLAY) {
-            val graphEntry = navController.getBackStackEntry(graphRoute)
+        composable(Routes.PATTERN_DISPLAY) { backStackEntry ->
+            val graphEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(graphRoute)
+            }
             val carriedStakes = stakesArgOf(graphEntry)
             val viewModel: PatternViewModel = viewModel(
                 viewModelStoreOwner = graphEntry,
@@ -164,7 +221,7 @@ private fun NavGraphBuilder.actIINavGraph(
                 viewModel = viewModel,
                 onActComplete = { patternActScore, _, _ ->
                     val stakes = carriedStakes + patternActScore
-                    navController.navigate(actIIIRoute(stakes)) {
+                    navController.navigate(Routes.intermission("II", stakes)) {
                         popUpTo(graphRoute) { inclusive = true }
                     }
                 }
@@ -177,18 +234,18 @@ private fun NavGraphBuilder.actIIINavGraph(
     navController: NavHostController,
     container: AppContainer
 ) {
-    val graphRoute = "${Graphs.ACT_III}/{${GambleArgs.STAKES}}"
+    val graphRoute = "${Graphs.ACT_III}/{${NavArgs.STAKES}}"
     navigation(startDestination = Routes.GAMBLE, route = graphRoute) {
-        composable(Routes.GAMBLE) {
-            val viewModel = gambleViewModel(navController, container, graphRoute)
+        composable(Routes.GAMBLE) { backStackEntry ->
+            val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
             GambleScreen(
                 viewModel = viewModel,
                 onReveal = { navController.navigate(Routes.GAMBLE_REVEAL) },
                 onActComplete = { _, _, _ -> navController.navigate(Routes.FINALE) }
             )
         }
-        composable(Routes.GAMBLE_REVEAL) {
-            val viewModel = gambleViewModel(navController, container, graphRoute)
+        composable(Routes.GAMBLE_REVEAL) { backStackEntry ->
+            val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
             GambleRevealScreen(
                 viewModel = viewModel,
                 onContinue = { navController.popBackStack() },
@@ -206,9 +263,12 @@ private fun NavGraphBuilder.actIIINavGraph(
 private fun gambleViewModel(
     navController: NavHostController,
     container: AppContainer,
-    graphRoute: String
+    graphRoute: String,
+    backStackEntry: NavBackStackEntry
 ): GambleViewModel {
-    val graphEntry = navController.getBackStackEntry(graphRoute)
+    val graphEntry = remember(backStackEntry) {
+        navController.getBackStackEntry(graphRoute)
+    }
     return viewModel(
         viewModelStoreOwner = graphEntry,
         factory = GambleViewModel.factory(
@@ -220,7 +280,35 @@ private fun gambleViewModel(
 }
 
 private fun stakesArgOf(entry: NavBackStackEntry): Int =
-    entry.arguments?.getString(GambleArgs.STAKES)?.toIntOrNull() ?: 0
+    entry.arguments?.getString(NavArgs.STAKES)?.toIntOrNull() ?: 0
+
+private fun actIdOf(act: Act): String = when (act) {
+    Act.ACT_II -> "II"
+    Act.ACT_III -> "III"
+    else -> "I"
+}
+
+private fun actFromId(id: String?): Act = when (id) {
+    "II" -> Act.ACT_II
+    "III" -> Act.ACT_III
+    else -> Act.ACT_I
+}
+
+private fun intermissionFromId(id: String?): Act = when (id) {
+    "II" -> Act.INTERMISSION_II
+    else -> Act.INTERMISSION_I
+}
+
+private fun actAfterIntermission(intermission: Act): Act = when (intermission) {
+    Act.INTERMISSION_II -> Act.ACT_III
+    else -> Act.ACT_II
+}
+
+private fun actGraphRoute(act: Act, stakes: Int): String = when (act) {
+    Act.ACT_II -> actIIRoute(stakes)
+    Act.ACT_III -> actIIIRoute(stakes)
+    else -> Graphs.ACT_I
+}
 
 private fun actIIRoute(stakes: Int) = "${Graphs.ACT_II}/$stakes"
 private fun actIIIRoute(stakes: Int) = "${Graphs.ACT_III}/$stakes"
