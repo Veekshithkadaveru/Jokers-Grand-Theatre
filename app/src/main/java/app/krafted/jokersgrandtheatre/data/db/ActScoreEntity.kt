@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class ActScoreEntity(
     @PrimaryKey val actName: String,
     val bestScore: Int,
+    val playerName: String = "Anonymous",
     val achievedAt: Long = System.currentTimeMillis()
 )

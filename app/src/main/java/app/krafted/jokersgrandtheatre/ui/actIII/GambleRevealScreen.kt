@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,7 +58,6 @@ import app.krafted.jokersgrandtheatre.ui.components.OrnateFrame
 import app.krafted.jokersgrandtheatre.ui.components.StageBackground
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
-import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonDeep
 import app.krafted.jokersgrandtheatre.viewmodel.GamblePhase
 import app.krafted.jokersgrandtheatre.viewmodel.GambleState
@@ -69,7 +67,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.random.Random
 
 @Composable
 fun GambleRevealScreen(
@@ -89,6 +86,7 @@ fun GambleRevealScreen(
     var revealComplete by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.round, state.selectedMask) {
+        if (state.selectedMask == null) return@LaunchedEffect
         flip.snapTo(0f); flash.snapTo(0f)
         desaturate.snapTo(0f); burst.snapTo(0f); sigh.snapTo(0f)
         revealComplete = false
@@ -106,10 +104,6 @@ fun GambleRevealScreen(
         }
         delay(150L)
         revealComplete = true
-    }
-
-    LaunchedEffect(state.phase) {
-        if (state.phase == GamblePhase.CHOOSING) onContinue()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -147,7 +141,9 @@ fun GambleRevealScreen(
                 fontSize = 13.sp,
                 letterSpacing = 3.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
             )
 
             Row(
@@ -165,12 +161,16 @@ fun GambleRevealScreen(
                             crownFound = crownFound,
                             desaturate = desaturate.value,
                             sigh = sigh.value,
-                            modifier = Modifier.weight(1f).aspectRatio(0.72f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(0.72f)
                         )
                     } else {
                         StaticMask(
                             dimmed = revealComplete,
-                            modifier = Modifier.weight(1f).aspectRatio(0.72f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(0.72f)
                         )
                     }
                 }
@@ -187,6 +187,7 @@ fun GambleRevealScreen(
                             onActComplete(state.actScore, state.playerWins, state.jokerWins)
                         } else {
                             viewModel.nextRound()
+                            onContinue()
                         }
                     }
                 )
@@ -256,7 +257,9 @@ private fun FlippingMask(
                     Image(
                         painter = painterResource(id = R.drawable.jok019_sym_7),
                         contentDescription = "Crown",
-                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(12.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else {
@@ -285,7 +288,11 @@ private fun StaticMask(dimmed: Boolean, modifier: Modifier = Modifier) {
             .alpha(if (dimmed) 0.4f else 0.85f)
             .clip(RoundedCornerShape(14.dp))
             .background(Brush.verticalGradient(listOf(Color(0xFF2A0306), Color(0xFF5A0A0A))))
-            .border(3.dp, ActAccent.copy(alpha = if (dimmed) 0.33f else 0.7f), RoundedCornerShape(14.dp)),
+            .border(
+                3.dp,
+                ActAccent.copy(alpha = if (dimmed) 0.33f else 0.7f),
+                RoundedCornerShape(14.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
         Box(
@@ -330,7 +337,12 @@ private fun RoundResultPanel(
 
     OrnateFrame(accent = ActAccent) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CinzelLabel("· RESULT ·", color = Color(0x8CFFE7A8), fontSize = 9.sp, letterSpacing = 3.sp)
+            CinzelLabel(
+                "· RESULT ·",
+                color = Color(0x8CFFE7A8),
+                fontSize = 9.sp,
+                letterSpacing = 3.sp
+            )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = title,
@@ -372,7 +384,9 @@ private fun RoundResultPanel(
             Spacer(Modifier.height(12.dp))
             GoldButton(
                 onClick = {
-                    if (!fired) { fired = true; onContinue() }
+                    if (!fired) {
+                        fired = true; onContinue()
+                    }
                 }
             ) {
                 Text(

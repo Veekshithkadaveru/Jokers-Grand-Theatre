@@ -68,7 +68,7 @@ class GambleViewModel(
         }
     }
 
-    fun revealMask() {
+    private fun revealMask() {
         val s = _state.value
         if (s.phase != GamblePhase.REVEALING) return
         val maskIndex = s.selectedMask ?: return
@@ -99,8 +99,24 @@ class GambleViewModel(
 
     fun nextRound() {
         if (_state.value.phase != GamblePhase.ROUND_END) return
-        _state.update { it.copy(round = it.round + 1) }
-        startRound(isVeryFirst = false)
+        val crown = engine.placeCrown()
+        val mis = engine.generateMisdirection(crown)
+        _state.update {
+            it.copy(
+                round = it.round + 1,
+                crownPosition = crown,
+                selectedMask = null,
+                revealedMasks = emptySet(),
+                misdirectionLine = mis.line,
+                isMisdirectionTruth = mis.isTruth,
+                hintedPosition = mis.hintedPosition,
+                stakes = baseStakes,
+                roundScore = 0,
+                phase = GamblePhase.CHOOSING,
+                jokerExpression = JokerExpression.UNHINGED,
+                jokerLine = dialogue.line("actIII", "roundStart")
+            )
+        }
     }
 
     fun acknowledgeActEnd() {
@@ -142,7 +158,10 @@ class GambleViewModel(
                 actScore = it.actScore + bonus,
                 phase = GamblePhase.ACT_END,
                 jokerExpression = if (playerWonAct) JokerExpression.IMPRESSED else JokerExpression.TRIUMPHANT,
-                jokerLine = dialogue.line("actIII", if (playerWonAct) "playerWinsAct" else "jokerWinsAct")
+                jokerLine = dialogue.line(
+                    "actIII",
+                    if (playerWonAct) "playerWinsAct" else "jokerWinsAct"
+                )
             )
         }
     }

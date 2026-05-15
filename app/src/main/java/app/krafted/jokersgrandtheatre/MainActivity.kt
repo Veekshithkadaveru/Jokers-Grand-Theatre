@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,6 +31,7 @@ import app.krafted.jokersgrandtheatre.ui.ActIntroScreen
 import app.krafted.jokersgrandtheatre.ui.GrandFinaleScreen
 import app.krafted.jokersgrandtheatre.ui.IntermissionScreen
 import app.krafted.jokersgrandtheatre.ui.LeaderboardScreen
+import app.krafted.jokersgrandtheatre.ui.SplashScreen
 import app.krafted.jokersgrandtheatre.ui.TheatreLobbyScreen
 import app.krafted.jokersgrandtheatre.ui.actI.WordDuelScreen
 import app.krafted.jokersgrandtheatre.ui.actII.PatternInputScreen
@@ -39,6 +42,7 @@ import app.krafted.jokersgrandtheatre.viewmodel.GambleViewModel
 import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
 import app.krafted.jokersgrandtheatre.viewmodel.WordDuelViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 object Routes {
@@ -95,10 +99,14 @@ class MainActivity : ComponentActivity() {
 fun TheatreNavHost(container: AppContainer) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.SPLASH) {
-        placeholderDestination(Routes.SPLASH, "Splash") {
-            navController.navigate(Routes.LOBBY) {
-                popUpTo(Routes.SPLASH) { inclusive = true }
-            }
+        composable(Routes.SPLASH) {
+            SplashScreen(
+                onFinished = {
+                    navController.navigate(Routes.LOBBY) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Routes.LOBBY) {
@@ -225,14 +233,41 @@ private fun NavGraphBuilder.actINavGraph(
                     dialogue = container.dialogueRepository
                 )
             )
+
+            var showNameDialog by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    false
+                )
+            }
+            var pendingScore by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    0
+                )
+            }
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+
             WordDuelScreen(
                 viewModel = viewModel,
                 onActComplete = { playerActScore, _, _, _ ->
-                    navController.navigate(Routes.intermission("I", playerActScore)) {
-                        popUpTo(Graphs.ACT_I) { inclusive = true }
-                    }
+                    pendingScore = playerActScore
+                    showNameDialog = true
                 }
             )
+
+            if (showNameDialog) {
+                app.krafted.jokersgrandtheatre.ui.components.NameEntryDialog(
+                    score = pendingScore,
+                    onSave = { name ->
+                        scope.launch {
+                            container.theatreDao.saveBestScore("actI", pendingScore, name)
+                            showNameDialog = false
+                            navController.navigate(Routes.intermission("I", pendingScore)) {
+                                popUpTo(Graphs.ACT_I) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -255,15 +290,42 @@ private fun NavGraphBuilder.actIINavGraph(
                     dialogue = container.dialogueRepository
                 )
             )
+
+            var showNameDialog by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    false
+                )
+            }
+            var pendingScore by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    0
+                )
+            }
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+
             PatternInputScreen(
                 viewModel = viewModel,
                 onActComplete = { patternActScore, _, _ ->
-                    val stakes = carriedStakes + patternActScore
-                    navController.navigate(Routes.intermission("II", stakes)) {
-                        popUpTo(graphRoute) { inclusive = true }
-                    }
+                    pendingScore = patternActScore
+                    showNameDialog = true
                 }
             )
+
+            if (showNameDialog) {
+                app.krafted.jokersgrandtheatre.ui.components.NameEntryDialog(
+                    score = pendingScore,
+                    onSave = { name ->
+                        scope.launch {
+                            container.theatreDao.saveBestScore("actII", pendingScore, name)
+                            showNameDialog = false
+                            val stakes = carriedStakes + pendingScore
+                            navController.navigate(Routes.intermission("II", stakes)) {
+                                popUpTo(graphRoute) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -280,13 +342,40 @@ private fun NavGraphBuilder.actIIINavGraph(
             }
             val priorStakes = stakesArgOf(graphEntry)
             val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
+
+            var showNameDialog by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    false
+                )
+            }
+            var pendingScore by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    0
+                )
+            }
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+
             GambleScreen(
                 viewModel = viewModel,
                 onReveal = { navController.navigate(Routes.GAMBLE_REVEAL) },
                 onActComplete = { gambleScore, _, _ ->
-                    navController.navigate(Routes.finale(priorStakes, gambleScore))
+                    pendingScore = gambleScore
+                    showNameDialog = true
                 }
             )
+
+            if (showNameDialog) {
+                app.krafted.jokersgrandtheatre.ui.components.NameEntryDialog(
+                    score = pendingScore,
+                    onSave = { name ->
+                        scope.launch {
+                            container.theatreDao.saveBestScore("actIII", pendingScore, name)
+                            showNameDialog = false
+                            navController.navigate(Routes.finale(priorStakes, pendingScore))
+                        }
+                    }
+                )
+            }
         }
         composable(Routes.GAMBLE_REVEAL) { backStackEntry ->
             val graphEntry = remember(backStackEntry) {
@@ -294,15 +383,42 @@ private fun NavGraphBuilder.actIIINavGraph(
             }
             val priorStakes = stakesArgOf(graphEntry)
             val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
+
+            var showNameDialog by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    false
+                )
+            }
+            var pendingScore by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    0
+                )
+            }
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+
             GambleRevealScreen(
                 viewModel = viewModel,
                 onContinue = { navController.popBackStack() },
                 onActComplete = { gambleScore, _, _ ->
-                    navController.navigate(Routes.finale(priorStakes, gambleScore)) {
-                        popUpTo(graphRoute) { inclusive = true }
-                    }
+                    pendingScore = gambleScore
+                    showNameDialog = true
                 }
             )
+
+            if (showNameDialog) {
+                app.krafted.jokersgrandtheatre.ui.components.NameEntryDialog(
+                    score = pendingScore,
+                    onSave = { name ->
+                        scope.launch {
+                            container.theatreDao.saveBestScore("actIII", pendingScore, name)
+                            showNameDialog = false
+                            navController.navigate(Routes.finale(priorStakes, pendingScore)) {
+                                popUpTo(graphRoute) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }

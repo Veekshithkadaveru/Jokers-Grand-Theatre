@@ -40,7 +40,8 @@ data class WordDuelState(
     val jokerLine: String = "",
     val lastWordResult: WordResult? = null,
     val lastSubmittedWord: String = "",
-    val lastSubmitter: Turn? = null
+    val lastSubmitter: Turn? = null,
+    val playerSubmitted: Boolean = false
 )
 
 class WordDuelViewModel(
@@ -61,70 +62,64 @@ class WordDuelViewModel(
         if (s.currentTurn != Turn.PLAYER) return
         if (s.phase != Phase.PLAYING) return
         if (index in s.lockedLetters) return
-        if (index in s.playerSelection) return
-        _state.update { it.copy(playerSelection = it.playerSelection + index) }
-    }
 
-    fun onUndoLastTap() {
-        val s = _state.value
-        if (s.currentTurn != Turn.PLAYER) return
-        if (s.phase != Phase.PLAYING) return
-        if (s.playerSelection.isEmpty()) return
-        _state.update { it.copy(playerSelection = it.playerSelection.dropLast(1)) }
-    }
-
-    fun onPass() {
-        val s = _state.value
-        if (s.currentTurn != Turn.PLAYER) return
-        if (s.phase != Phase.PLAYING) return
-
-        if (s.playerSelection.isEmpty()) {
-            _state.update { it.copy(currentTurn = Turn.JOKER) }
-            runJokerTurn()
-            return
-        }
-
-        val submitted = engine.buildWord(s.grid, s.playerSelection)
-        val newPlayerWord = s.playerWord + submitted
+        val pickedChar = s.grid[index]
+        val newPlayerWord = s.playerWord + pickedChar
         val result = engine.validateWord(newPlayerWord)
+        val newLocked = s.lockedLetters + index
 
-        when (result) {
-            WordResult.VALID -> {
-                val oldScore = if (s.playerWord.isEmpty()) 0 else engine.scoreWord(s.playerWord, s.round)
-                val newScore = engine.scoreWord(newPlayerWord, s.round)
-                val delta = newScore - oldScore
-                val isGood = newPlayerWord.length >= 5
-                val newLocked = s.lockedLetters + s.playerSelection.toSet()
-                _state.update {
-                    it.copy(
-                        lockedLetters = newLocked,
-                        playerWord = newPlayerWord,
-                        playerSelection = emptyList(),
-                        playerRoundScore = it.playerRoundScore + delta,
-                        jokerExpression = if (isGood) JokerExpression.IMPRESSED else JokerExpression.AMUSED,
-                        jokerLine = dialogue.line("actI", if (isGood) "playerGoodWord" else "playerBadWord"),
-                        lastWordResult = WordResult.VALID,
-                        lastSubmittedWord = submitted,
-                        lastSubmitter = Turn.PLAYER,
-                        currentTurn = Turn.JOKER
-                    )
-                }
-            }
-            WordResult.TOO_SHORT, WordResult.NOT_A_WORD -> {
-                _state.update {
-                    it.copy(
-                        playerSelection = emptyList(),
-                        jokerExpression = JokerExpression.AMUSED,
-                        jokerLine = dialogue.line("actI", "playerBadWord"),
-                        lastWordResult = result,
-                        lastSubmittedWord = submitted,
-                        lastSubmitter = Turn.PLAYER,
-                        currentTurn = Turn.JOKER
-                    )
-                }
-            }
+        val scoreDelta = if (result == WordResult.VALID) {
+            val prevValidScore =
+                if (s.playerWord.isNotEmpty() && engine.validateWord(s.playerWord) == WordResult.VALID)
+                    engine.scoreWord(s.playerWord, s.round) else 0
+            engine.scoreWord(newPlayerWord, s.round) - prevValidScore
+        } else 0
+
+        val isGood = result == WordResult.VALID && newPlayerWord.length >= 5
+        _state.update {
+            it.copy(
+                lockedLetters = newLocked,
+                playerWord = newPlayerWord,
+                playerRoundScore = it.playerRoundScore + scoreDelta,
+                jokerExpression = if (result == WordResult.VALID) (if (isGood) JokerExpression.IMPRESSED else JokerExpression.AMUSED) else it.jokerExpression,
+                jokerLine = if (result == WordResult.VALID) dialogue.line(
+                    "actI",
+                    if (isGood) "playerGoodWord" else "playerBadWord"
+                ) else it.jokerLine,
+                lastWordResult = result,
+                lastSubmittedWord = pickedChar.toString(),
+                lastSubmitter = Turn.PLAYER,
+                currentTurn = Turn.JOKER
+            )
         }
 
+        if (_state.value.lockedLetters.size >= 10) {
+            endRound()
+        } else {
+            runJokerTurn()
+        }
+    }
+
+    fun onUndoLastTap() { /* no-op: single-letter tap commits immediately */
+    }
+
+    fun onPass() { /* no-op: no multi-letter buffering */
+    }
+
+    fun onSubmitWord() {
+        val s = _state.value
+        if (s.currentTurn != Turn.PLAYER) return
+        if (s.phase != Phase.PLAYING) return
+        if (engine.validateWord(s.playerWord) != WordResult.VALID) return
+        val isGood = s.playerWord.length >= 5
+        _state.update {
+            it.copy(
+                playerSubmitted = true,
+                currentTurn = Turn.JOKER,
+                jokerExpression = if (isGood) JokerExpression.IMPRESSED else JokerExpression.AMUSED,
+                jokerLine = dialogue.line("actI", if (isGood) "playerGoodWord" else "playerBadWord")
+            )
+        }
         runJokerTurn()
     }
 
@@ -166,7 +161,8 @@ class WordDuelViewModel(
                 jokerLine = dialogue.line("actI", openingEvent),
                 lastWordResult = null,
                 lastSubmittedWord = "",
-                lastSubmitter = null
+                lastSubmitter = null,
+                playerSubmitted = false
             )
         }
     }
@@ -192,7 +188,10 @@ class WordDuelViewModel(
             val jokerResult = engine.validateWord(newJokerWord)
             val scoreDelta = if (jokerResult == WordResult.VALID) {
                 val oldScore = if (s.jokerWord.isEmpty()) 0 else {
-                    if (engine.validateWord(s.jokerWord) == WordResult.VALID) engine.scoreWord(s.jokerWord, s.round) else 0
+                    if (engine.validateWord(s.jokerWord) == WordResult.VALID) engine.scoreWord(
+                        s.jokerWord,
+                        s.round
+                    ) else 0
                 }
                 engine.scoreWord(newJokerWord, s.round) - oldScore
             } else 0
@@ -209,8 +208,10 @@ class WordDuelViewModel(
                 )
             }
 
-            if (_state.value.lockedLetters.size >= WordDuelEngine.GRID_SIZE - 3) {
+            if (_state.value.lockedLetters.size >= 10) {
                 endRound()
+            } else if (_state.value.playerSubmitted) {
+                runJokerTurn()
             } else {
                 _state.update { it.copy(currentTurn = Turn.PLAYER) }
             }
@@ -230,8 +231,10 @@ class WordDuelViewModel(
         val actDone = newPlayerRoundsWon >= 2 || newJokerRoundsWon >= 2 || s.round >= 3
 
         val roundWinnerIsPlayer = playerWon
-        val roundExpression = if (roundWinnerIsPlayer) JokerExpression.IMPRESSED else JokerExpression.AMUSED
-        val roundLine = dialogue.line("actI", if (roundWinnerIsPlayer) "playerWinsRound" else "jokerWinsRound")
+        val roundExpression =
+            if (roundWinnerIsPlayer) JokerExpression.IMPRESSED else JokerExpression.AMUSED
+        val roundLine =
+            dialogue.line("actI", if (roundWinnerIsPlayer) "playerWinsRound" else "jokerWinsRound")
 
         _state.update {
             it.copy(
@@ -256,7 +259,10 @@ class WordDuelViewModel(
                 it.copy(
                     phase = Phase.ACT_END,
                     jokerExpression = if (actPlayerWins) JokerExpression.IMPRESSED else JokerExpression.TRIUMPHANT,
-                    jokerLine = dialogue.line("actI", if (actPlayerWins) "playerWinsAct" else "jokerWinsAct")
+                    jokerLine = dialogue.line(
+                        "actI",
+                        if (actPlayerWins) "playerWinsAct" else "jokerWinsAct"
+                    )
                 )
             }
         }

@@ -28,19 +28,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -60,11 +58,9 @@ import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
 import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonDeep
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonHi
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldDeep
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldHi
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreInk
 import app.krafted.jokersgrandtheatre.viewmodel.Phase
 import app.krafted.jokersgrandtheatre.viewmodel.Turn
 import app.krafted.jokersgrandtheatre.viewmodel.WordDuelState
@@ -119,11 +115,7 @@ fun WordDuelScreen(
                     .weight(1f)
             )
             Spacer(Modifier.height(10.dp))
-            ActionRow(
-                state = state,
-                onUndo = viewModel::onUndoLastTap,
-                onPass = viewModel::onPass
-            )
+            SubmitWordButton(state = state, onSubmit = viewModel::onSubmitWord)
         }
 
         if (state.phase == Phase.ROUND_END) {
@@ -158,7 +150,7 @@ private fun ActTopBar(state: WordDuelState) {
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = "· R${state.round}/3",
+            text = "· R${state.round}/3 · ${state.lockedLetters.size}/10",
             color = Color(0xA6FFE7A8),
             fontFamily = CinzelFamily,
             fontSize = 9.sp,
@@ -168,7 +160,8 @@ private fun ActTopBar(state: WordDuelState) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             for (i in 0 until 3) {
                 val playerWin = i < state.playerRoundsWon
-                val jokerWin = i >= state.playerRoundsWon && i < state.playerRoundsWon + state.jokerRoundsWon
+                val jokerWin =
+                    i >= state.playerRoundsWon && i < state.playerRoundsWon + state.jokerRoundsWon
                 val isCurrent = i == state.playerRoundsWon + state.jokerRoundsWon
                 Box(
                     modifier = Modifier
@@ -222,8 +215,7 @@ private fun JokerStrip(state: WordDuelState) {
 
 @Composable
 private fun WordDisplayRow(state: WordDuelState) {
-    val pendingLetters = state.playerSelection.map { state.grid[it] }
-    val playerTiles = state.playerWord.toList() + pendingLetters
+    val playerTiles = state.playerWord.toList()
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         WordStrip(
             label = "JOKER",
@@ -378,11 +370,13 @@ private fun LetterGrid(
                                 isJokerLastPick = state.jokerLastPick == idx,
                                 jokerGlowAlpha = jokerGlow.value,
                                 enabled = state.currentTurn == Turn.PLAYER &&
-                                    !state.isJokerThinking &&
-                                    state.phase == Phase.PLAYING,
+                                        !state.isJokerThinking &&
+                                        state.phase == Phase.PLAYING,
                                 entranceAlpha = cellAlphas.getOrNull(idx)?.value ?: 1f,
                                 onTap = { onLetterTap(idx) },
-                                modifier = Modifier.weight(1f).aspectRatio(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
                             )
                         } else {
                             Spacer(Modifier.weight(1f))
@@ -434,7 +428,11 @@ private fun LetterCell(
             )
             .then(
                 if (isJokerLastPick && jokerGlowAlpha > 0f)
-                    Modifier.border(2.dp, Color(0xFFFF5A3A).copy(alpha = jokerGlowAlpha), RoundedCornerShape(8.dp))
+                    Modifier.border(
+                        2.dp,
+                        Color(0xFFFF5A3A).copy(alpha = jokerGlowAlpha),
+                        RoundedCornerShape(8.dp)
+                    )
                 else Modifier
             )
             .clickable(enabled = enabled && !isLocked, onClick = onTap),
@@ -447,60 +445,78 @@ private fun LetterCell(
             fontWeight = FontWeight.Black,
             fontSize = 22.sp,
             style = TextStyle(
-                shadow = if (!isLocked) Shadow(Color.White.copy(alpha = 0.5f), Offset(0f, 2f), 0f) else null
+                shadow = if (!isLocked) Shadow(
+                    Color.White.copy(alpha = 0.5f),
+                    Offset(0f, 2f),
+                    0f
+                ) else null
             )
         )
     }
 }
 
+
 @Composable
-private fun ActionRow(state: WordDuelState, onUndo: () -> Unit, onPass: () -> Unit) {
-    val canAct = state.currentTurn == Turn.PLAYER && state.phase == Phase.PLAYING
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+private fun SubmitWordButton(state: WordDuelState, onSubmit: () -> Unit) {
+    val canSubmit = state.currentTurn == Turn.PLAYER &&
+            state.phase == Phase.PLAYING &&
+            !state.isJokerThinking &&
+            !state.playerSubmitted &&
+            state.playerWord.length >= 3 &&
+            state.lastWordResult == WordResult.VALID
+    val label = when {
+        state.playerSubmitted -> "WORD LOCKED — JOKER'S TURN"
+        canSubmit -> "SUBMIT  \"${state.playerWord}\""
+        else -> "SUBMIT WORD"
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                when {
+                    state.playerSubmitted -> Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF1A3A1A),
+                            Color(0xFF0D200D)
+                        )
+                    )
+
+                    canSubmit -> Brush.verticalGradient(
+                        listOf(
+                            Color(0xFFC92A1A),
+                            Color(0xFF7A0F12)
+                        )
+                    )
+
+                    else -> Brush.verticalGradient(listOf(Color(0x33FFFFFF), Color(0x22FFFFFF)))
+                }
+            )
+            .border(
+                2.dp,
+                when {
+                    state.playerSubmitted -> Color(0xFF4CAF50).copy(alpha = 0.7f)
+                    canSubmit -> ActAccent
+                    else -> ActAccent.copy(alpha = 0.25f)
+                },
+                RoundedCornerShape(8.dp)
+            )
+            .clickable(enabled = canSubmit, onClick = onSubmit)
+            .padding(bottom = 6.dp),
+        contentAlignment = Alignment.Center
     ) {
-
-        val undoEnabled = canAct && state.playerSelection.isNotEmpty()
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(44.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0x8C000000))
-                .border(2.dp, ActAccent.copy(alpha = if (undoEnabled) 0.55f else 0.22f), RoundedCornerShape(8.dp))
-                .clickable(enabled = undoEnabled, onClick = onUndo),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "← UNDO",
-                color = ActAccent.copy(alpha = if (undoEnabled) 1f else 0.4f),
-                fontFamily = CinzelFamily,
-                fontSize = 12.sp,
-                letterSpacing = 1.5.sp
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .weight(1.4f)
-                .height(44.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(
-                    Brush.verticalGradient(listOf(Color(0xFFC92A1A), Color(0xFF7A0F12)))
-                )
-                .border(2.dp, ActAccent, RoundedCornerShape(8.dp))
-                .clickable(enabled = canAct, onClick = onPass),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (!canAct) "PASSED" else "SUBMIT WORD",
-                color = Color.White.copy(alpha = if (canAct) 1f else 0.5f),
-                fontFamily = CinzelFamily,
-                fontSize = 13.sp,
-                letterSpacing = 1.5.sp
-            )
-        }
+        Text(
+            text = label,
+            color = when {
+                state.playerSubmitted -> Color(0xFF81C784)
+                canSubmit -> Color.White
+                else -> ActAccent.copy(alpha = 0.35f)
+            },
+            fontFamily = CinzelFamily,
+            fontSize = 13.sp,
+            letterSpacing = 1.5.sp
+        )
     }
 }
 

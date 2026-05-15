@@ -145,32 +145,43 @@ private fun ActRecordRow(record: ActRecord) {
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Text(
-                        text = record.entity.bestScore
-                            .toString()
-                            .reversed()
-                            .chunked(3)
-                            .joinToString(",")
-                            .reversed(),
-                        style = TextStyle(
-                            fontFamily = CinzelDecorativeFamily,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 40.sp,
-                            brush = Brush.verticalGradient(
-                                listOf(TheatreGoldHi, TheatreGold, TheatreGoldDeep)
-                            ),
-                            letterSpacing = 1.sp,
-                            textAlign = TextAlign.Start
+                    Column {
+                        Text(
+                            text = record.entity.playerName.uppercase(),
+                            fontFamily = PlayfairFamily,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 14.sp,
+                            color = Color(0xB3E8D29A)
                         )
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    CinzelLabel(
-                        text = "pts",
-                        color = TheatreGold.copy(alpha = 0.7f),
-                        fontSize = 10.sp,
-                        letterSpacing = 1.sp,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = record.entity.bestScore
+                                    .toString()
+                                    .reversed()
+                                    .chunked(3)
+                                    .joinToString(",")
+                                    .reversed(),
+                                style = TextStyle(
+                                    fontFamily = CinzelDecorativeFamily,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 40.sp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(TheatreGoldHi, TheatreGold, TheatreGoldDeep)
+                                    ),
+                                    letterSpacing = 1.sp,
+                                    textAlign = TextAlign.Start
+                                )
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            CinzelLabel(
+                                text = "pts",
+                                color = TheatreGold.copy(alpha = 0.7f),
+                                fontSize = 10.sp,
+                                letterSpacing = 1.sp,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                        }
+                    }
                     Spacer(Modifier.weight(1f))
                     Column(horizontalAlignment = Alignment.End) {
                         CinzelLabel(

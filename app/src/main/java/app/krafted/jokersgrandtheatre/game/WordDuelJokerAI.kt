@@ -5,7 +5,7 @@ import kotlin.random.Random
 
 class WordDuelJokerAI(private val dictionary: DictionaryRepository) {
 
-    private val followUpLetters = listOf('E', 'A', 'S', 'R', 'T', 'N', 'I', 'O', 'L')
+    private var targetWord: String? = null
 
     fun pickLetter(
         grid: List<Char>,
@@ -17,16 +17,56 @@ class WordDuelJokerAI(private val dictionary: DictionaryRepository) {
         val unlockedIndices = grid.indices.filter { it !in lockedLetters }
         if (unlockedIndices.isEmpty()) return null
 
+        if (jokerWord.isEmpty()) resetState()
+
         return when (round) {
-            1 -> pickRandom(unlockedIndices)
+            1 -> pickRoundOne(grid, unlockedIndices, jokerWord)
             2 -> pickRoundTwo(grid, unlockedIndices, playerWord, jokerWord)
             else -> pickRoundThree(grid, unlockedIndices, playerWord, jokerWord)
         }
     }
 
+    fun resetState() {
+        targetWord = null
+    }
+
     private fun pickRandom(unlockedIndices: List<Int>): Int? {
         if (unlockedIndices.isEmpty()) return null
         return unlockedIndices[Random.Default.nextInt(unlockedIndices.size)]
+    }
+
+    private fun getValidExtensions(
+        grid: List<Char>,
+        unlockedIndices: List<Int>,
+        jokerWord: String
+    ): List<Int> {
+        val availableOnly = unlockedIndices.map { grid[it].lowercaseChar() }
+        val extensions = mutableListOf<Int>()
+        for (index in unlockedIndices) {
+            val candidate = (jokerWord + grid[index]).lowercase()
+            if (dictionary.isValidWord(candidate)) {
+                extensions.add(index)
+            } else {
+                val remainingLetters = availableOnly.toMutableList()
+                remainingLetters.remove(grid[index].lowercaseChar())
+                if (dictionary.findShortestWordWithPrefixFromLetters(candidate, remainingLetters, candidate.length + 1) != null) {
+                    extensions.add(index)
+                }
+            }
+        }
+        return extensions
+    }
+
+    private fun pickRoundOne(
+        grid: List<Char>,
+        unlockedIndices: List<Int>,
+        jokerWord: String
+    ): Int? {
+        val extensions = getValidExtensions(grid, unlockedIndices, jokerWord)
+        if (extensions.isNotEmpty()) {
+            return extensions[Random.Default.nextInt(extensions.size)]
+        }
+        return pickRandom(unlockedIndices)
     }
 
     private fun pickRoundTwo(
@@ -35,15 +75,17 @@ class WordDuelJokerAI(private val dictionary: DictionaryRepository) {
         playerWord: String,
         jokerWord: String
     ): Int? {
-        val extendFirst = Random.Default.nextBoolean()
-        val extend = { tryExtend(grid, unlockedIndices, jokerWord) }
-        val block = { tryBlock(grid, unlockedIndices, playerWord) }
+        val extensions = getValidExtensions(grid, unlockedIndices, jokerWord)
+        if (extensions.isEmpty()) return pickRandom(unlockedIndices)
 
-        val primary = if (extendFirst) extend() else block()
-        if (primary != null) return primary
-        val secondary = if (extendFirst) block() else extend()
-        if (secondary != null) return secondary
-        return pickRandom(unlockedIndices)
+        if (playerWord.isNotEmpty()) {
+            val blockingExt = extensions.firstOrNull { index ->
+                dictionary.isValidWord((playerWord + grid[index]).lowercase())
+            }
+            if (blockingExt != null) return blockingExt
+        }
+
+        return extensions[Random.Default.nextInt(extensions.size)]
     }
 
     private fun pickRoundThree(
@@ -52,85 +94,48 @@ class WordDuelJokerAI(private val dictionary: DictionaryRepository) {
         playerWord: String,
         jokerWord: String
     ): Int? {
-        val criticalBlock = pickCriticalBlock(grid, unlockedIndices, playerWord)
-        if (criticalBlock != null) return criticalBlock
+        val availableLetters = unlockedIndices.map { grid[it] }
 
-        val extend = tryExtend(grid, unlockedIndices, jokerWord)
-        if (extend != null) return extend
+        if (targetWord != null) {
+            if (jokerWord.length >= targetWord!!.length) {
+                targetWord = null
+            } else {
+                val remainingNeeded = targetWord!!.drop(jokerWord.length)
+                val remainingAvailable = availableLetters.toMutableList()
+                for (c in remainingNeeded) {
+                    val idx = remainingAvailable.indexOfFirst { it.lowercaseChar() == c.lowercaseChar() }
+                    if (idx == -1) {
+                        targetWord = null
+                        break
+                    }
+                    remainingAvailable.removeAt(idx)
+                }
+            }
+        }
+
+        if (targetWord == null) {
+            val jokerPrefix = jokerWord.lowercase()
+            val availableOnly = availableLetters.map { it.lowercaseChar() }
+            val preferredMin = maxOf(4, jokerWord.length + 1)
+            val fallbackMin = maxOf(3, jokerWord.length + 1)
+            val newTarget = (dictionary.findShortestWordWithPrefixFromLetters(jokerPrefix, availableOnly, preferredMin)
+                ?: dictionary.findShortestWordWithPrefixFromLetters(jokerPrefix, availableOnly, fallbackMin))
+            if (newTarget != null) {
+                targetWord = newTarget
+            }
+        }
+
+        if (targetWord != null) {
+            val nextNeededChar = targetWord!![jokerWord.length].lowercaseChar()
+            val match = unlockedIndices.firstOrNull { grid[it].lowercaseChar() == nextNeededChar }
+            if (match != null) return match
+        }
+
+        val extensions = getValidExtensions(grid, unlockedIndices, jokerWord)
+        if (extensions.isNotEmpty()) {
+            return extensions[Random.Default.nextInt(extensions.size)]
+        }
 
         return pickRandom(unlockedIndices)
-    }
-
-    private fun tryExtend(
-        grid: List<Char>,
-        unlockedIndices: List<Int>,
-        jokerWord: String
-    ): Int? {
-        for (index in unlockedIndices) {
-            val candidate = jokerWord + grid[index]
-            if (dictionary.isValidWord(candidate.lowercase())) return index
-            if (hasPrefix(candidate)) return index
-        }
-        return null
-    }
-
-    private fun tryBlock(
-        grid: List<Char>,
-        unlockedIndices: List<Int>,
-        playerWord: String
-    ): Int? {
-        if (playerWord.isNotEmpty()) {
-            val direct = unlockedIndices.firstOrNull {
-                dictionary.isValidWord((playerWord + grid[it]).lowercase())
-            }
-            if (direct != null) return direct
-        }
-
-        val counts = mutableMapOf<Char, Int>()
-        for (index in unlockedIndices) {
-            val ch = grid[index]
-            counts[ch] = (counts[ch] ?: 0) + 1
-        }
-        val mostCommon = counts.maxByOrNull { it.value }?.key ?: return null
-        return unlockedIndices.firstOrNull { grid[it] == mostCommon }
-    }
-
-    private fun pickCriticalBlock(
-        grid: List<Char>,
-        unlockedIndices: List<Int>,
-        playerWord: String
-    ): Int? {
-        if (playerWord.isEmpty()) return null
-
-        val counts = mutableMapOf<Char, Int>()
-        for (index in unlockedIndices) {
-            val ch = grid[index]
-            counts[ch] = (counts[ch] ?: 0) + 1
-        }
-
-        val criticalLetters = mutableSetOf<Char>()
-        val seen = mutableSetOf<Char>()
-        for (index in unlockedIndices) {
-            val ch = grid[index]
-            if (ch in seen) continue
-            seen.add(ch)
-            val candidate = playerWord + ch
-            if (dictionary.isValidWord(candidate.lowercase()) || hasPrefix(candidate)) {
-                criticalLetters.add(ch)
-            }
-        }
-
-        if (criticalLetters.isEmpty()) return null
-
-        val bestLetter = criticalLetters.maxByOrNull { counts[it] ?: 0 } ?: return null
-        return unlockedIndices.firstOrNull { grid[it] == bestLetter }
-    }
-
-    private fun hasPrefix(prefix: String): Boolean {
-        val lower = prefix.lowercase()
-        for (followUp in followUpLetters) {
-            if (dictionary.isValidWord(lower + followUp.lowercaseChar())) return true
-        }
-        return false
     }
 }

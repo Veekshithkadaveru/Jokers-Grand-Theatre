@@ -16,10 +16,10 @@ interface TheatreDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertScore(entity: ActScoreEntity)
 
-    suspend fun saveBestScore(actName: String, newScore: Int) {
+    suspend fun saveBestScore(actName: String, newScore: Int, playerName: String = "Anonymous") {
         val current = getBestScore(actName)
         if (current == null || newScore > current.bestScore) {
-            upsertScore(ActScoreEntity(actName = actName, bestScore = newScore))
+            upsertScore(ActScoreEntity(actName = actName, bestScore = newScore, playerName = playerName))
         }
     }
 }

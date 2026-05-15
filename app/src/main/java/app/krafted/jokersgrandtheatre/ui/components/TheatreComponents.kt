@@ -14,6 +14,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -24,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,11 +35,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -48,14 +46,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
+import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreCrimsonDeep
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldDeep
 import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldHi
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreInk
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreInkDeep
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreVelvet
-import kotlinx.coroutines.delay
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -78,35 +73,10 @@ fun StageBackground(
                 .fillMaxSize()
                 .background(tint)
         )
-        SpotlightVignette()
+        SpotlightBackground()
     }
 }
 
-@Composable
-fun SpotlightVignette(intensity: Float = 0.7f) {
-    val infinite = rememberInfiniteTransition(label = "spotlight")
-    val alpha by infinite.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 0.75f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "spotlightAlpha"
-    )
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    Color.Black.copy(alpha = intensity * alpha)
-                ),
-                center = Offset(size.width * 0.5f, size.height * 0.35f),
-                radius = size.width * 0.85f
-            )
-        )
-    }
-}
 
 private data class Ember(
     val startX: Float,
@@ -184,8 +154,10 @@ fun OrnateFrame(
             Alignment.TopStart, Alignment.TopEnd,
             Alignment.BottomStart, Alignment.BottomEnd
         ).forEach { alignment ->
-            val dx = if (alignment == Alignment.TopStart || alignment == Alignment.BottomStart) (-5).dp else 5.dp
-            val dy = if (alignment == Alignment.TopStart || alignment == Alignment.TopEnd) (-5).dp else 5.dp
+            val dx =
+                if (alignment == Alignment.TopStart || alignment == Alignment.BottomStart) (-5).dp else 5.dp
+            val dy =
+                if (alignment == Alignment.TopStart || alignment == Alignment.TopEnd) (-5).dp else 5.dp
             Box(
                 modifier = Modifier
                     .align(alignment)
@@ -399,5 +371,74 @@ fun Curtain(
             topLeft = Offset(0f, 48.dp.toPx() - 3.dp.toPx()),
             size = androidx.compose.ui.geometry.Size(w, 3.dp.toPx())
         )
+    }
+}
+
+@Composable
+fun NameEntryDialog(
+    score: Int,
+    onSave: (String) -> Unit
+) {
+    var name by mutableStateOf("")
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = { /* forced entry */ }) {
+        OrnateFrame(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            accent = TheatreGold,
+            padding = 24.dp
+        ) {
+            androidx.compose.foundation.layout.Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TheatricalTitle(text = "Bravo!", size = 28.sp)
+                androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
+                CinzelLabel(text = "YOUR SCORE", color = Color(0xB3E8D29A))
+                androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
+                Text(
+                    text = score.toString(),
+                    style = TextStyle(
+                        fontFamily = CinzelDecorativeFamily,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 36.sp,
+                        color = TheatreGoldHi
+                    )
+                )
+                androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
+                androidx.compose.material3.OutlinedTextField(
+                    value = name,
+                    onValueChange = { if (it.length <= 16) name = it },
+                    label = { Text("Enter Your Name", color = Color(0xB3E8D29A)) },
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        color = TheatreGoldHi,
+                        fontFamily = PlayfairFamily,
+                        fontSize = 18.sp
+                    ),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = TheatreGold,
+                        unfocusedBorderColor = TheatreGold.copy(alpha = 0.5f),
+                        cursorColor = TheatreGoldHi
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                androidx.compose.foundation.layout.Spacer(Modifier.height(24.dp))
+                GoldButton(
+                    onClick = { onSave(if (name.isBlank()) "Anonymous" else name) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "RECORD SCORE",
+                        fontFamily = CinzelFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        letterSpacing = 2.sp,
+                        color = TheatreCrimsonDeep
+                    )
+                }
+            }
+        }
     }
 }
