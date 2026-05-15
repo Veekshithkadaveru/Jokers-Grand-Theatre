@@ -4,15 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import app.krafted.jokersgrandtheatre.ui.actII.PatternInputScreen
 import app.krafted.jokersgrandtheatre.ui.actIII.GambleRevealScreen
 import app.krafted.jokersgrandtheatre.ui.actIII.GambleScreen
 import app.krafted.jokersgrandtheatre.ui.theme.JokersGrandTheatreTheme
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
 import app.krafted.jokersgrandtheatre.viewmodel.GambleViewModel
 import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
 import app.krafted.jokersgrandtheatre.viewmodel.WordDuelViewModel
@@ -51,13 +53,10 @@ object Routes {
     const val LEADERBOARD = "leaderboard"
     const val ACT_INTRO = "actIntro/{actId}/{stakes}"
     const val WORD_DUEL = "wordDuel"
-    const val WORD_DUEL_RESULT = "wordDuelResult"
     const val PATTERN_DISPLAY = "patternDisplay"
     const val PATTERN_INPUT = "patternInput"
-    const val PATTERN_RESULT = "patternResult"
     const val GAMBLE = "gamble"
     const val GAMBLE_REVEAL = "gambleReveal"
-    const val GAMBLE_RESULT = "gambleResult"
     const val INTERMISSION = "intermission/{intermissionId}/{stakes}"
     const val FINALE = "finale/{priorStakes}/{actIIIScore}"
 
@@ -110,22 +109,29 @@ fun TheatreNavHost(container: AppContainer) {
         }
 
         composable(Routes.LOBBY) {
-            val scores = produceState(initialValue = emptyList<ActScoreEntity>()) {
-                value = withContext(Dispatchers.IO) { container.theatreDao.getAllBestScores() }
+            var scores by remember { mutableStateOf<List<ActScoreEntity>?>(null) }
+            LaunchedEffect(Unit) {
+                scores = withContext(Dispatchers.IO) { container.theatreDao.getAllBestScores() }
             }
-            val scoreMap = scores.value.associateBy { it.actName }
-            TheatreLobbyScreen(
-                bestActIScore = scoreMap["actI"]?.bestScore ?: 0,
-                bestActIIScore = scoreMap["actII"]?.bestScore ?: 0,
-                bestActIIIScore = scoreMap["actIII"]?.bestScore ?: 0,
-                onPlayAct = { act ->
-                    navController.navigate(Routes.actIntro(actIdOf(act), 0))
-                },
-                onPlayAll = {
-                    navController.navigate(Routes.actIntro("I", 0))
-                },
-                onLeaderboard = { navController.navigate(Routes.LEADERBOARD) }
-            )
+            if (scores == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = TheatreGold)
+                }
+            } else {
+                val scoreMap = scores!!.associateBy { it.actName }
+                TheatreLobbyScreen(
+                    bestActIScore = scoreMap["actI"]?.bestScore ?: 0,
+                    bestActIIScore = scoreMap["actII"]?.bestScore ?: 0,
+                    bestActIIIScore = scoreMap["actIII"]?.bestScore ?: 0,
+                    onPlayAct = { act ->
+                        navController.navigate(Routes.actIntro(actIdOf(act), 0))
+                    },
+                    onPlayAll = {
+                        navController.navigate(Routes.actIntro("I", 0))
+                    },
+                    onLeaderboard = { navController.navigate(Routes.LEADERBOARD) }
+                )
+            }
         }
 
         composable(Routes.ACT_INTRO) { entry ->
@@ -163,17 +169,21 @@ fun TheatreNavHost(container: AppContainer) {
         }
 
         composable(Routes.LEADERBOARD) {
-            val scores = produceState(initialValue = emptyList<ActScoreEntity>()) {
-                value = withContext(Dispatchers.IO) { container.theatreDao.getAllBestScores() }
+            var scores by remember { mutableStateOf<List<ActScoreEntity>?>(null) }
+            LaunchedEffect(Unit) {
+                scores = withContext(Dispatchers.IO) { container.theatreDao.getAllBestScores() }
             }
-            LeaderboardScreen(
-                bestScores = scores.value,
-                onBack = { navController.popBackStack() }
-            )
+            if (scores == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = TheatreGold)
+                }
+            } else {
+                LeaderboardScreen(
+                    bestScores = scores!!,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
-        placeholderDestination(Routes.WORD_DUEL_RESULT, "Word Duel Result", onTap = null)
-        placeholderDestination(Routes.PATTERN_RESULT, "Pattern Result", onTap = null)
-        placeholderDestination(Routes.GAMBLE_RESULT, "Gamble Result", onTap = null)
 
         composable(Routes.FINALE) { entry ->
             val priorStakes = entry.arguments?.getString(NavArgs.PRIOR_STAKES)?.toIntOrNull() ?: 0
@@ -195,27 +205,6 @@ fun TheatreNavHost(container: AppContainer) {
     }
 }
 
-private fun NavGraphBuilder.placeholderDestination(
-    route: String,
-    label: String,
-    onTap: (() -> Unit)?
-) {
-    composable(route) {
-        Box(
-            modifier = if (onTap != null) {
-                Modifier
-                    .fillMaxSize()
-                    .clickable(onClick = onTap)
-            } else {
-                Modifier.fillMaxSize()
-            },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(if (onTap != null) "$label (tap to continue)" else label)
-        }
-    }
-}
-
 private fun NavGraphBuilder.actINavGraph(
     navController: NavHostController,
     container: AppContainer
@@ -234,16 +223,8 @@ private fun NavGraphBuilder.actINavGraph(
                 )
             )
 
-            var showNameDialog by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    false
-                )
-            }
-            var pendingScore by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    0
-                )
-            }
+            var showNameDialog by rememberSaveable { mutableStateOf(false) }
+            var pendingScore by rememberSaveable { mutableStateOf(0) }
             val scope = androidx.compose.runtime.rememberCoroutineScope()
 
             WordDuelScreen(
@@ -251,6 +232,9 @@ private fun NavGraphBuilder.actINavGraph(
                 onActComplete = { playerActScore, _, _, _ ->
                     pendingScore = playerActScore
                     showNameDialog = true
+                },
+                onBack = {
+                    navController.navigate(Routes.LOBBY) { popUpTo(0) { inclusive = true } }
                 }
             )
 
@@ -259,7 +243,9 @@ private fun NavGraphBuilder.actINavGraph(
                     score = pendingScore,
                     onSave = { name ->
                         scope.launch {
-                            container.theatreDao.saveBestScore("actI", pendingScore, name)
+                            try {
+                                container.theatreDao.saveBestScore("actI", pendingScore, name)
+                            } catch (_: Exception) { }
                             showNameDialog = false
                             navController.navigate(Routes.intermission("I", pendingScore)) {
                                 popUpTo(Graphs.ACT_I) { inclusive = true }
@@ -291,16 +277,8 @@ private fun NavGraphBuilder.actIINavGraph(
                 )
             )
 
-            var showNameDialog by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    false
-                )
-            }
-            var pendingScore by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    0
-                )
-            }
+            var showNameDialog by rememberSaveable { mutableStateOf(false) }
+            var pendingScore by rememberSaveable { mutableStateOf(0) }
             val scope = androidx.compose.runtime.rememberCoroutineScope()
 
             PatternInputScreen(
@@ -308,6 +286,9 @@ private fun NavGraphBuilder.actIINavGraph(
                 onActComplete = { patternActScore, _, _ ->
                     pendingScore = patternActScore
                     showNameDialog = true
+                },
+                onBack = {
+                    navController.navigate(Routes.LOBBY) { popUpTo(0) { inclusive = true } }
                 }
             )
 
@@ -316,7 +297,9 @@ private fun NavGraphBuilder.actIINavGraph(
                     score = pendingScore,
                     onSave = { name ->
                         scope.launch {
-                            container.theatreDao.saveBestScore("actII", pendingScore, name)
+                            try {
+                                container.theatreDao.saveBestScore("actII", pendingScore, name)
+                            } catch (_: Exception) { }
                             showNameDialog = false
                             val stakes = carriedStakes + pendingScore
                             navController.navigate(Routes.intermission("II", stakes)) {
@@ -343,16 +326,8 @@ private fun NavGraphBuilder.actIIINavGraph(
             val priorStakes = stakesArgOf(graphEntry)
             val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
 
-            var showNameDialog by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    false
-                )
-            }
-            var pendingScore by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    0
-                )
-            }
+            var showNameDialog by rememberSaveable { mutableStateOf(false) }
+            var pendingScore by rememberSaveable { mutableStateOf(0) }
             val scope = androidx.compose.runtime.rememberCoroutineScope()
 
             GambleScreen(
@@ -361,6 +336,9 @@ private fun NavGraphBuilder.actIIINavGraph(
                 onActComplete = { gambleScore, _, _ ->
                     pendingScore = gambleScore
                     showNameDialog = true
+                },
+                onBack = {
+                    navController.navigate(Routes.LOBBY) { popUpTo(0) { inclusive = true } }
                 }
             )
 
@@ -369,7 +347,9 @@ private fun NavGraphBuilder.actIIINavGraph(
                     score = pendingScore,
                     onSave = { name ->
                         scope.launch {
-                            container.theatreDao.saveBestScore("actIII", pendingScore, name)
+                            try {
+                                container.theatreDao.saveBestScore("actIII", pendingScore, name)
+                            } catch (_: Exception) { }
                             showNameDialog = false
                             navController.navigate(Routes.finale(priorStakes, pendingScore))
                         }
@@ -384,16 +364,8 @@ private fun NavGraphBuilder.actIIINavGraph(
             val priorStakes = stakesArgOf(graphEntry)
             val viewModel = gambleViewModel(navController, container, graphRoute, backStackEntry)
 
-            var showNameDialog by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    false
-                )
-            }
-            var pendingScore by androidx.compose.runtime.remember {
-                androidx.compose.runtime.mutableStateOf(
-                    0
-                )
-            }
+            var showNameDialog by rememberSaveable { mutableStateOf(false) }
+            var pendingScore by rememberSaveable { mutableStateOf(0) }
             val scope = androidx.compose.runtime.rememberCoroutineScope()
 
             GambleRevealScreen(
@@ -402,6 +374,9 @@ private fun NavGraphBuilder.actIIINavGraph(
                 onActComplete = { gambleScore, _, _ ->
                     pendingScore = gambleScore
                     showNameDialog = true
+                },
+                onBack = {
+                    navController.navigate(Routes.LOBBY) { popUpTo(0) { inclusive = true } }
                 }
             )
 
@@ -410,7 +385,9 @@ private fun NavGraphBuilder.actIIINavGraph(
                     score = pendingScore,
                     onSave = { name ->
                         scope.launch {
-                            container.theatreDao.saveBestScore("actIII", pendingScore, name)
+                            try {
+                                container.theatreDao.saveBestScore("actIII", pendingScore, name)
+                            } catch (_: Exception) { }
                             showNameDialog = false
                             navController.navigate(Routes.finale(priorStakes, pendingScore)) {
                                 popUpTo(graphRoute) { inclusive = true }

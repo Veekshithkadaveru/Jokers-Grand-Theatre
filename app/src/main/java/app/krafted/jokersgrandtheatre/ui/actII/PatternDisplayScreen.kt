@@ -10,19 +10,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -44,56 +41,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.krafted.jokersgrandtheatre.R
 import app.krafted.jokersgrandtheatre.ui.components.CinzelLabel
-import app.krafted.jokersgrandtheatre.ui.components.EmberParticles
 import app.krafted.jokersgrandtheatre.ui.components.JokerPortrait
-import app.krafted.jokersgrandtheatre.ui.components.StageBackground
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
 import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldDeep
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreGoldHi
-import app.krafted.jokersgrandtheatre.ui.theme.TheatreSilver
 import app.krafted.jokersgrandtheatre.viewmodel.PatternState
-import app.krafted.jokersgrandtheatre.viewmodel.PatternViewModel
 
 private val ActAccent = Color(0xFFC0C0C0)
-private val ActBg = Color(0xC5020C08)
-
-@Composable
-fun PatternDisplayScreen(
-    viewModel: PatternViewModel,
-    modifier: Modifier = Modifier
-) {
-    val state by viewModel.state.collectAsState()
-
-    Box(modifier = modifier.fillMaxSize()) {
-        StageBackground(R.drawable.jok019_back_3, tint = ActBg)
-        EmberParticles(density = 10, opacity = 0.3f)
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .padding(horizontal = 14.dp, vertical = 10.dp)
-        ) {
-            PatternTopBar(state)
-            Spacer(Modifier.height(8.dp))
-            PatternJokerStrip(state)
-            Spacer(Modifier.height(10.dp))
-            ProgressStrip(state)
-            Spacer(Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                ActiveSymbolDisplay(activeSymbolIndex = state.activeSymbolIndex)
-            }
-        }
-    }
-}
 
 @Composable
 internal fun ActiveSymbolDisplay(activeSymbolIndex: Int) {
@@ -112,10 +66,9 @@ internal fun ActiveSymbolDisplay(activeSymbolIndex: Int) {
 
     Box(modifier = Modifier.size(200.dp), contentAlignment = Alignment.Center) {
         if (isActive) {
-
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .size(200.dp)
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(

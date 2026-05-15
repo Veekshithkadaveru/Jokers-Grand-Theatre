@@ -49,6 +49,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import app.krafted.jokersgrandtheatre.game.TapResult
 import app.krafted.jokersgrandtheatre.ui.components.CinzelLabel
 import app.krafted.jokersgrandtheatre.ui.components.DialogueBox
@@ -77,9 +80,37 @@ private val ActBg = Color(0xC5020C08)
 @Composable
 fun PatternInputScreen(
     viewModel: PatternViewModel,
-    onActComplete: (playerActScore: Int, playerRoundsWon: Int, jokerRoundsWon: Int) -> Unit = { _, _, _ -> }
+    onActComplete: (playerActScore: Int, playerRoundsWon: Int, jokerRoundsWon: Int) -> Unit = { _, _, _ -> },
+    onBack: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
+    var showQuitDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = state.phase != PatternPhase.ACT_END) { showQuitDialog = true }
+
+    if (showQuitDialog) {
+        AlertDialog(
+            onDismissRequest = { showQuitDialog = false },
+            containerColor = Color(0xFF2A0306),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+            title = {
+                Text("Abandon the Stage?", fontFamily = CinzelDecorativeFamily, fontWeight = FontWeight.Black, fontSize = 18.sp, color = ActAccent)
+            },
+            text = {
+                Text("Your progress in this act will be lost.", fontFamily = PlayfairFamily, fontStyle = FontStyle.Italic, fontSize = 13.sp, color = Color(0xBFFFE7A8))
+            },
+            confirmButton = {
+                TextButton(onClick = { showQuitDialog = false; onBack() }) {
+                    Text("QUIT", fontFamily = CinzelFamily, fontWeight = FontWeight.Bold, color = Color(0xFFFF5A3A), fontSize = 13.sp, letterSpacing = 2.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showQuitDialog = false }) {
+                    Text("STAY", fontFamily = CinzelFamily, fontWeight = FontWeight.Bold, color = ActAccent, fontSize = 13.sp, letterSpacing = 2.sp)
+                }
+            }
+        )
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         StageBackground(

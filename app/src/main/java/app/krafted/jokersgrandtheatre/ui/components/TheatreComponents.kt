@@ -379,7 +379,7 @@ fun NameEntryDialog(
     score: Int,
     onSave: (String) -> Unit
 ) {
-    var name by mutableStateOf("")
+    var name by remember { mutableStateOf("") }
 
     androidx.compose.ui.window.Dialog(onDismissRequest = { /* forced entry */ }) {
         OrnateFrame(

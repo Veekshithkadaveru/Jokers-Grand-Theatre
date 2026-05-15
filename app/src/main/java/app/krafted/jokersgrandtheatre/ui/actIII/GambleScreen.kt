@@ -19,10 +19,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +51,7 @@ import app.krafted.jokersgrandtheatre.ui.components.StageBackground
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelDecorativeFamily
 import app.krafted.jokersgrandtheatre.ui.theme.CinzelFamily
 import app.krafted.jokersgrandtheatre.ui.theme.PlayfairFamily
+import app.krafted.jokersgrandtheatre.ui.theme.TheatreGold
 import app.krafted.jokersgrandtheatre.viewmodel.GamblePhase
 import app.krafted.jokersgrandtheatre.viewmodel.GambleState
 import app.krafted.jokersgrandtheatre.viewmodel.GambleViewModel
@@ -56,14 +63,41 @@ private val ActBg = Color(0xC53A0A02)
 fun GambleScreen(
     viewModel: GambleViewModel,
     onReveal: () -> Unit = {},
-    onActComplete: (playerActScore: Int, playerWins: Int, jokerWins: Int) -> Unit = { _, _, _ -> }
+    onActComplete: (playerActScore: Int, playerWins: Int, jokerWins: Int) -> Unit = { _, _, _ -> },
+    onBack: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
+    var showQuitDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = state.phase != GamblePhase.ACT_END) { showQuitDialog = true }
+
+    if (showQuitDialog) {
+        AlertDialog(
+            onDismissRequest = { showQuitDialog = false },
+            containerColor = Color(0xFF2A0306),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+            title = {
+                Text("Abandon the Stage?", fontFamily = CinzelDecorativeFamily, fontWeight = FontWeight.Black, fontSize = 18.sp, color = TheatreGold)
+            },
+            text = {
+                Text("Your progress in this act will be lost.", fontFamily = PlayfairFamily, fontStyle = FontStyle.Italic, fontSize = 13.sp, color = Color(0xBFFFE7A8))
+            },
+            confirmButton = {
+                TextButton(onClick = { showQuitDialog = false; onBack() }) {
+                    Text("QUIT", fontFamily = CinzelFamily, fontWeight = FontWeight.Bold, color = Color(0xFFFF5A3A), fontSize = 13.sp, letterSpacing = 2.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showQuitDialog = false }) {
+                    Text("STAY", fontFamily = CinzelFamily, fontWeight = FontWeight.Bold, color = ActAccent, fontSize = 13.sp, letterSpacing = 2.sp)
+                }
+            }
+        )
+    }
 
     LaunchedEffect(state.phase) {
         when (state.phase) {
             GamblePhase.REVEALING -> onReveal()
-            GamblePhase.ACT_END -> onActComplete(state.actScore, state.playerWins, state.jokerWins)
             else -> Unit
         }
     }
